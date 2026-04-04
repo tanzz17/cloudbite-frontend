@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;700;900&display=swap');
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-body bg-brand-cream text-gray-800 transition-colors duration-300;
+  }
+
+  .dark body {
+    @apply bg-brand-dark-bg text-gray-100;
+  }
+
+  h1, h2, h3 {
+    @apply font-display;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-orange-50 dark:bg-brand-dark-surface;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-orange-400 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-orange-500;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply bg-orange-gradient text-white font-body font-bold px-6 py-3 rounded-2xl
+           shadow-orange hover:shadow-orange-lg hover:scale-[1.02] active:scale-[0.98]
+           transition-all duration-200 cursor-pointer border-none outline-none;
+  }
+
+  .btn-secondary {
+    @apply bg-white dark:bg-brand-dark-card text-orange-600 dark:text-orange-400
+           font-body font-bold px-6 py-3 rounded-2xl border-2 border-orange-500
+           hover:bg-orange-50 dark:hover:bg-brand-dark-border
+           transition-all duration-200 cursor-pointer;
+  }
+
+  .btn-ghost {
+    @apply text-orange-600 dark:text-orange-400 font-body font-semibold px-4 py-2
+           rounded-xl hover:bg-orange-50 dark:hover:bg-brand-dark-border
+           transition-all duration-200 cursor-pointer;
+  }
+
+  .btn-danger {
+    @apply bg-red-500 text-white font-body font-bold px-5 py-2.5 rounded-xl
+           hover:bg-red-600 active:bg-red-700 transition-all duration-200 cursor-pointer;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white dark:bg-brand-dark-card rounded-3xl shadow-card dark:shadow-card-dark
+           border border-orange-50 dark:border-brand-dark-border overflow-hidden
+           transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-orange hover:-translate-y-1 cursor-pointer;
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl bg-orange-50 dark:bg-brand-dark-surface
+           border border-orange-100 dark:border-brand-dark-border
+           text-gray-800 dark:text-gray-100 font-body
+           focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent
+           placeholder-gray-400 dark:placeholder-gray-500
+           transition-all duration-200;
+  }
+
+  .input-label {
+    @apply block text-sm font-body font-semibold text-gray-700 dark:text-gray-300 mb-1.5;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-body font-bold;
+  }
+
+  .badge-pending   { @apply badge bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300; }
+  .badge-confirmed { @apply badge bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300; }
+  .badge-preparing { @apply badge bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300; }
+  .badge-ready     { @apply badge bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300; }
+  .badge-pickup    { @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300; }
+  .badge-delivery  { @apply badge bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300; }
+  .badge-delivered { @apply badge bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300; }
+  .badge-cancelled { @apply badge bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300; }
+  .badge-active    { @apply badge bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300; }
+  .badge-inactive  { @apply badge bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400; }
+  .badge-veg       { @apply badge bg-green-50 text-green-600 border border-green-300; }
+  .badge-nonveg    { @apply badge bg-red-50 text-red-600 border border-red-300; }
+
+  /* Sidebar */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-2xl font-body font-semibold text-sm
+           text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-brand-dark-border
+           hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200;
+  }
+
+  .sidebar-link.active {
+    @apply bg-orange-gradient text-white shadow-orange;
+  }
+
+  /* Section title */
+  .section-title {
+    @apply font-display text-2xl font-bold text-gray-900 dark:text-white;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 dark:bg-brand-dark-card/80 backdrop-blur-md;
+  }
+
+  /* Page wrapper */
+  .page-wrapper {
+    @apply min-h-screen bg-brand-cream dark:bg-brand-dark-bg transition-colors duration-300;
+  }
+
+  /* Dashboard layout */
+  .dash-layout {
+    @apply flex h-screen overflow-hidden bg-orange-50 dark:bg-brand-dark-bg;
+  }
+
+  .dash-sidebar {
+    @apply w-64 h-full bg-white dark:bg-brand-dark-surface flex flex-col
+           border-r border-orange-100 dark:border-brand-dark-border
+           shadow-card overflow-y-auto flex-shrink-0;
+  }
+
+  .dash-content {
+    @apply flex-1 overflow-y-auto p-6;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply card p-6 flex items-center gap-4;
+  }
+
+  .stat-icon {
+    @apply w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0;
+  }
+
+  /* Order card */
+  .order-status-bar {
+    @apply flex items-center gap-2 mb-4 overflow-x-auto pb-2;
+  }
+
+  .order-status-step {
+    @apply flex-1 min-w-0 flex flex-col items-center gap-1;
+  }
+
+  .order-status-dot {
+    @apply w-3 h-3 rounded-full border-2 flex-shrink-0;
+  }
+
+  /* Kitchen card on customer page */
+  .kitchen-card {
+    @apply card-hover relative overflow-hidden;
+  }
+
+  .kitchen-card img {
+    @apply w-full h-48 object-cover transition-transform duration-500;
+  }
+
+  /* Toast overrides */
+  .custom-toast {
+    @apply font-body rounded-2xl shadow-orange;
+  }
+
+  /* Floating label effect */
+  .float-label-group {
+    @apply relative;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-orange-gradient;
+  }
+
+  .border-gradient {
+    border-image: linear-gradient(135deg, #f97316, #ea580c) 1;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-400 { animation-delay: 400ms; }
+  .animate-delay-500 { animation-delay: 500ms; }
+}
+
+/* Leaflet map fixes */
+.leaflet-container {
+  border-radius: 1rem;
+  z-index: 0;
+}
+
+/* Razorpay modal fix */
+.razorpay-backdrop {
+  z-index: 9999 !important;
+}
+
+/* Loading shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, #1a1108 25%, #241a0d 50%, #1a1108 75%);
+  background-size: 200% 100%;
+}
