@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useAuth } from '../../context/AuthContext'
-import { profileAPI } from '../../services/api'
-import { formatDate } from '../../utils/helpers'
+import { useAuth } from '../context/AuthContext'
+import { profileAPI } from '../services/api'
+import { formatDate } from '../utils/helpers'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
