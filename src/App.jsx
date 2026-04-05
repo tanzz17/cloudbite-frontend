@@ -31,6 +31,7 @@ import { CustomerOrders, OrderDetail } from './pages/customer/CustomerOrders'
 
 // Delivery
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard'
+import LandingPage from './pages/LandingPage'
 
 export default function App() {
   return (
@@ -57,7 +58,7 @@ export default function App() {
               {/* Public */}
               <Route path="/login"    element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/"         element={<Navigate to="/login" replace />} />
+              <Route path="/"         element={<LandingPage />} />
 
               {/* ======== ADMIN DASHBOARD ======== */}
               <Route path="/admin" element={
