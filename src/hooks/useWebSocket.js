@@ -9,6 +9,7 @@ const WS_URL = import.meta.env.VITE_API_URL
 export const useWebSocket = (subscriptions = []) => {
   const clientRef = useRef(null)
   const subscriptionsRef = useRef(subscriptions)
+  const shouldLogRef = useRef(false)
 
   useEffect(() => {
     subscriptionsRef.current = subscriptions
@@ -18,6 +19,7 @@ export const useWebSocket = (subscriptions = []) => {
     const token = localStorage.getItem('cloudbite_token')
     if (!token) return
 
+    shouldLogRef.current = true
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
       connectHeaders: { Authorization: `Bearer ${token}` },
@@ -33,14 +35,25 @@ export const useWebSocket = (subscriptions = []) => {
           })
         })
       },
-      onDisconnect: () => console.log('WS disconnected'),
-      onStompError: (frame) => console.error('STOMP error', frame),
+      onDisconnect: () => {
+        if (import.meta.env.DEV && shouldLogRef.current) {
+          console.log('WS disconnected')
+        }
+      },
+      onStompError: (frame) => {
+        if (import.meta.env.DEV) {
+          console.error('STOMP error', frame)
+        }
+      },
     })
 
     client.activate()
     clientRef.current = client
 
-    return () => { client.deactivate() }
+    return () => {
+      shouldLogRef.current = false
+      client.deactivate()
+    }
   }, [])
 
   const publish = useCallback((destination, body) => {

@@ -63,7 +63,16 @@ export default function LoginPage() {
       {/* Right - Login Form */}
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between items-center p-6">
-          <div className="lg:hidden"><CloudBiteLogo size="sm" /></div>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-brand-dark-border dark:text-orange-400 dark:hover:bg-brand-dark-card transition-all"
+            >
+              <span aria-hidden="true">←</span>
+              <span className="font-body font-semibold text-sm">Back to Landing</span>
+            </Link>
+            <div className="lg:hidden"><CloudBiteLogo size="sm" /></div>
+          </div>
           <div className="ml-auto"><ThemeToggle /></div>
         </div>
 

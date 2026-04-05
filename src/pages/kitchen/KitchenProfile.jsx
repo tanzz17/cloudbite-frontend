@@ -48,7 +48,7 @@ export default function KitchenProfilePage() {
         longitude: form.longitude ? Number(form.longitude) : null,
       })
       toast.success('Kitchen profile saved! 🏪')
-    } catch { toast.error('Failed to save') }
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed to save kitchen profile') }
     finally { setSaving(false) }
   }
 

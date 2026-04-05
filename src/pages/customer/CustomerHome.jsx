@@ -208,7 +208,7 @@ export default function CustomerHome() {
                       </button>
                     ))}
                     <div className="border-t border-amber-100 dark:border-amber-900 mt-1 pt-1">
-                      <button onClick={() => { logout(); navigate('/login') }}
+                      <button onClick={() => { logout(); navigate('/', { replace: true }) }}
                         className="w-full text-left px-4 py-2.5 font-body text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
                         🚪 Logout
                       </button>
