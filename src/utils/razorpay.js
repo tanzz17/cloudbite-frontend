@@ -1,5 +1,7 @@
 import { paymentAPI } from '../services/api'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+
 const ensureRazorpayLoaded = () => new Promise((resolve, reject) => {
   if (window.Razorpay) {
     resolve(true)
@@ -22,44 +24,27 @@ const ensureRazorpayLoaded = () => new Promise((resolve, reject) => {
   document.body.appendChild(script)
 })
 
-export const openRazorpayCheckout = async ({ orderId, user, onSuccess }) => {
+export const startRazorpayRedirectCheckout = async ({ orderId, user }) => {
   await ensureRazorpayLoaded()
   const { data } = await paymentAPI.createOrder(orderId)
 
-  return new Promise((resolve, reject) => {
-    const rzp = new window.Razorpay({
-      key: data.keyId,
-      amount: Math.round(Number(data.amount) * 100),
-      currency: data.currency || 'INR',
-      name: 'CloudBite',
-      description: `Order ${data.orderNumber || ''}`.trim(),
-      order_id: data.razorpayOrderId,
-      prefill: {
-        name: data.customerName || user?.name || '',
-        email: data.customerEmail || user?.email || '',
-        contact: data.customerPhone || user?.phone || '',
-      },
-      theme: { color: '#f97316' },
-      handler: async (response) => {
-        try {
-          await paymentAPI.verifyPayment({
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature,
-            orderId,
-          })
-          await onSuccess?.()
-          resolve(true)
-        } catch {
-          reject(new Error('Payment verification failed'))
-        }
-      },
-      modal: {
-        ondismiss: () => reject(new Error('Payment cancelled')),
-      },
-    })
-
-    rzp.on('payment.failed', () => reject(new Error('Payment failed. Please try again.')))
-    rzp.open()
+  const rzp = new window.Razorpay({
+    key: data.keyId,
+    amount: Math.round(Number(data.amount) * 100),
+    currency: data.currency || 'INR',
+    name: 'CloudBite',
+    description: `Order ${data.orderNumber || ''}`.trim(),
+    order_id: data.razorpayOrderId,
+    prefill: {
+      name: data.customerName || user?.name || '',
+      email: data.customerEmail || user?.email || '',
+      contact: data.customerPhone || user?.phone || '',
+    },
+    theme: { color: '#f97316' },
+    callback_url: `${API_BASE}/api/payments/callback?order_id=${orderId}`,
+    redirect: true,
   })
+
+  rzp.open()
+  return true
 }

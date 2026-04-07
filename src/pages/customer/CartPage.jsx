@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { customerAPI } from '../../services/api'
 import { formatCurrency } from '../../utils/helpers'
-import { openRazorpayCheckout } from '../../utils/razorpay'
+import { startRazorpayRedirectCheckout } from '../../utils/razorpay'
 import toast from 'react-hot-toast'
 
 export default function CartPage() {
@@ -43,16 +43,17 @@ export default function CartPage() {
       const { data: order } = await customerAPI.placeOrder(orderData)
 
       if (paymentMethod === 'RAZORPAY') {
-        await openRazorpayCheckout({ orderId: order.id, user })
-        toast.success('🎉 Order placed & payment successful!')
+        await fetchCart()
+        toast.success('Redirecting to Razorpay...')
+        await startRazorpayRedirectCheckout({ orderId: order.id, user })
+        return
       } else {
         toast.success('🎉 Order placed! Pay on delivery.')
       }
       await fetchCart()
       navigate(`/orders/${order.id}`)
     } catch (err) {
-      if (err.message === 'Payment cancelled') toast.error('Payment cancelled')
-      else if (err.message === 'Unable to load Razorpay checkout') toast.error('Razorpay checkout could not load. Please check your network and try again.')
+      if (err.message === 'Unable to load Razorpay checkout') toast.error('Razorpay checkout could not load. Please check your network and try again.')
       else toast.error(err.response?.data?.message || 'Failed to place order')
     } finally { setPlacing(false) }
   }
