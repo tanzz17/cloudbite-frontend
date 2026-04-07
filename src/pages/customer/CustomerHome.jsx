@@ -92,6 +92,12 @@ const KitchenCard = ({ kitchen, onClick, index }) => (
         <span className="text-xs font-body text-gray-400">Min. {formatCurrency(kitchen.minOrderAmount)}</span>
         <span className="text-xs font-body font-bold text-amber-600 dark:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Menu →</span>
       </div>
+      {kitchen.matchingDishes?.length > 0 && (
+        <p className="mt-2 text-[11px] font-body text-amber-700 dark:text-amber-300 truncate">
+          {kitchen.matchingDishes.length > 1 ? 'Matching dishes: ' : 'Matching dish: '}
+          {kitchen.matchingDishes.join(', ')}
+        </p>
+      )}
     </div>
   </div>
 )
@@ -379,7 +385,7 @@ export default function CustomerHome() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayed.map((kitchen, i) => (
-                <KitchenCard key={kitchen.id} kitchen={kitchen} index={i}
+                <KitchenCard key={kitchen.id} kitchen={{ ...kitchen, matchingDishes: cuisineFilter === 'All' ? [] : allMenuItems.filter(item => item.kitchenId === kitchen.id && (item.category || '').toLowerCase() === cuisineFilter.toLowerCase()).slice(0, 2).map(item => item.name) }} index={i}
                   onClick={() => navigate(`/kitchen-menu/${kitchen.id}`)} />
               ))}
             </div>
