@@ -7,6 +7,8 @@ import { ThemeToggle } from '../../components/common/index'
 import { formatCurrency } from '../../utils/helpers'
 import toast from 'react-hot-toast'
 
+const asArray = (value) => Array.isArray(value) ? value : []
+
 // ── Maharashtra cuisine slides ────────────────────────────────────────────────
 const CUISINE_SLIDES = [
   { label: 'Breakfast',    emoji: '🌅', desc: 'Start your morning right',  dishes: ['Poha', 'Upma', 'Sabudana Khichdi', 'Thalipeeth'], color: 'from-yellow-400 to-amber-500',  bg: 'from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20' },
@@ -123,9 +125,10 @@ export default function CustomerHome() {
   useEffect(() => {
     customerAPI.getKitchens()
       .then(async r => {
-        setKitchens(r.data)
+        const kitchensData = asArray(r.data)
+        setKitchens(kitchensData)
         const menus = await Promise.all(
-          r.data.slice(0, 6).map(k => customerAPI.getMenu(k.id).then(m => m.data.map(item => ({ ...item, kitchenId: k.id }))).catch(() => []))
+          kitchensData.slice(0, 6).map(k => customerAPI.getMenu(k.id).then(m => asArray(m.data).map(item => ({ ...item, kitchenId: k.id }))).catch(() => []))
         )
         setAllMenuItems(menus.flat())
       })
@@ -144,7 +147,7 @@ export default function CustomerHome() {
     if (!search.trim()) { setSearchResults(null); return }
     searchTimeout.current = setTimeout(async () => {
       setSearchLoading(true)
-      try { const { data } = await customerAPI.searchKitchens(search); setSearchResults(data) }
+      try { const { data } = await customerAPI.searchKitchens(search); setSearchResults(asArray(data)) }
       catch { }
       finally { setSearchLoading(false) }
     }, 400)

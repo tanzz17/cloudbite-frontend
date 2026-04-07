@@ -5,6 +5,7 @@ import { formatCurrency } from '../../utils/helpers'
 import toast from 'react-hot-toast'
 
 const CATEGORIES = ['Starters', 'Main Course', 'Breads', 'Rice & Biryani', 'Desserts', 'Beverages', 'Snacks', 'Combos', 'Soups', 'Salads']
+const asArray = (value) => Array.isArray(value) ? value : []
 
 const emptyForm = { name: '', description: '', price: '', category: '', imageUrl: '', isVeg: true, preparationTime: 20 }
 
@@ -20,7 +21,7 @@ export default function KitchenMenu() {
 
   const fetch = () => {
     kitchenAPI.getMenu()
-      .then(r => setItems(r.data))
+      .then(r => setItems(asArray(r.data)))
       .catch(err => { if (err.response?.status !== 404) toast.error('Failed to load menu') })
       .finally(() => setLoading(false))
   }

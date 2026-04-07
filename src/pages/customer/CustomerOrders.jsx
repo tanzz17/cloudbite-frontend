@@ -6,6 +6,8 @@ import { formatCurrency, formatDate, timeAgo, getStepIndex, TRACKING_STEPS } fro
 import { useWebSocket } from '../../hooks/useWebSocket'
 import toast from 'react-hot-toast'
 
+const asArray = (value) => Array.isArray(value) ? value : []
+
 // ==================== ORDERS LIST ====================
 export function CustomerOrders() {
   const [orders, setOrders] = useState([])
@@ -13,7 +15,7 @@ export function CustomerOrders() {
 
   useEffect(() => {
     customerAPI.getOrders()
-      .then(r => setOrders(r.data))
+      .then(r => setOrders(asArray(r.data)))
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false))
   }, [])

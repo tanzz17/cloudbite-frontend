@@ -6,6 +6,8 @@ import { formatCurrency, formatDate, timeAgo } from '../../utils/helpers'
 import { useWebSocket } from '../../hooks/useWebSocket'
 import toast from 'react-hot-toast'
 
+const asArray = (value) => Array.isArray(value) ? value : []
+
 export default function DeliveryDashboard() {
   const { user, updateUser } = useAuth()
   const [availableOrders, setAvailableOrders] = useState([])
@@ -20,8 +22,8 @@ export default function DeliveryDashboard() {
         deliveryAPI.getAvailableOrders(),
         deliveryAPI.getMyOrders(),
       ])
-      setAvailableOrders(avail.data)
-      setMyOrders(mine.data)
+      setAvailableOrders(asArray(avail.data))
+      setMyOrders(asArray(mine.data))
     } catch { toast.error('Failed to load orders') }
     finally { setLoading(false) }
   }, [])

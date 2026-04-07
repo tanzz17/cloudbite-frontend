@@ -4,6 +4,8 @@ import { Modal, ConfirmModal, EmptyState, FormInput } from '../../components/com
 import { formatDate } from '../../utils/helpers'
 import toast from 'react-hot-toast'
 
+const asArray = (value) => Array.isArray(value) ? value : []
+
 export default function AdminOwners() {
   const [owners, setOwners] = useState([])
   const [loading, setLoading] = useState(true)
@@ -16,7 +18,7 @@ export default function AdminOwners() {
 
   const fetch = () => {
     adminAPI.getKitchenOwners()
-      .then(r => setOwners(r.data))
+      .then(r => setOwners(asArray(r.data)))
       .catch(() => toast.error('Failed to load owners'))
       .finally(() => setLoading(false))
   }

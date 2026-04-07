@@ -6,6 +6,8 @@ import { formatCurrency, formatDate, getStatusBadge } from '../../utils/helpers'
 import { useWebSocket } from '../../hooks/useWebSocket'
 import toast from 'react-hot-toast'
 
+const asArray = (value) => Array.isArray(value) ? value : []
+
 export default function KitchenDashboard() {
   const [kitchen, setKitchen] = useState(null)
   const [orders, setOrders] = useState([])
@@ -21,7 +23,7 @@ export default function KitchenDashboard() {
         kitchenAPI.getRevenue(),
       ])
       setKitchen(kitchenRes.data)
-      setOrders(ordersRes.data)
+      setOrders(asArray(ordersRes.data))
       setRevenue(revRes.data.revenue || 0)
     } catch (err) {
       if (err.response?.status === 404) {
