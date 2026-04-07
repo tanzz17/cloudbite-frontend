@@ -132,7 +132,7 @@ export default function CustomerHome() {
         )
         setAllMenuItems(menus.flat())
       })
-      .catch(() => {})
+      .catch(() => toast.error('Failed to load kitchens'))
       .finally(() => setLoading(false))
   }, [])
 
