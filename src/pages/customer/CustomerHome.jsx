@@ -128,7 +128,7 @@ export default function CustomerHome() {
         const kitchensData = asArray(r.data)
         setKitchens(kitchensData)
         const menus = await Promise.all(
-          kitchensData.slice(0, 6).map(k => customerAPI.getMenu(k.id).then(m => asArray(m.data).map(item => ({ ...item, kitchenId: k.id }))).catch(() => []))
+          kitchensData.map(k => customerAPI.getMenu(k.id).then(m => asArray(m.data).map(item => ({ ...item, kitchenId: k.id }))).catch(() => []))
         )
         setAllMenuItems(menus.flat())
       })
@@ -154,7 +154,11 @@ export default function CustomerHome() {
   }, [search])
 
   const displayed = searchResults
-    ?? (cuisineFilter === 'All' ? kitchens : kitchens.filter(k => k.cuisineType?.toLowerCase().includes(cuisineFilter.toLowerCase())))
+    ?? (cuisineFilter === 'All'
+      ? kitchens
+      : kitchens.filter(k => allMenuItems.some(item =>
+          item.kitchenId === k.id && (item.category || '').toLowerCase() === cuisineFilter.toLowerCase()
+        )))
 
   const slide = CUISINE_SLIDES[slideIndex]
 
