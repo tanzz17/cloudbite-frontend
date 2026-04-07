@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
-import { customerAPI, paymentAPI } from '../../services/api'
+import { customerAPI } from '../../services/api'
 import { formatCurrency } from '../../utils/helpers'
+import { openRazorpayCheckout } from '../../utils/razorpay'
 import toast from 'react-hot-toast'
 
 export default function CartPage() {
@@ -27,35 +28,6 @@ export default function CartPage() {
     catch { toast.error('Failed to update') }
   }
 
-  const handleRazorpayPayment = async (orderId) => {
-    const { data } = await paymentAPI.createOrder(orderId)
-    return new Promise((resolve, reject) => {
-      const rzp = new window.Razorpay({
-        key: data.keyId,
-        amount: data.amount * 100,
-        currency: 'INR',
-        name: 'CloudBite',
-        description: 'Food Order',
-        order_id: data.razorpayOrderId,
-        prefill: { name: user.name, email: user.email, contact: user.phone },
-        theme: { color: '#f97316' },
-        handler: async (response) => {
-          try {
-            await paymentAPI.verifyPayment({
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              orderId,
-            })
-            resolve(true)
-          } catch { reject(new Error('Payment verification failed')) }
-        },
-        modal: { ondismiss: () => reject(new Error('Payment cancelled')) },
-      })
-      rzp.open()
-    })
-  }
-
   const handleCheckout = async () => {
     if (!deliveryAddress.trim()) { toast.error('Please enter delivery address'); return }
     if (items.length === 0) { toast.error('Cart is empty'); return }
@@ -71,7 +43,7 @@ export default function CartPage() {
       const { data: order } = await customerAPI.placeOrder(orderData)
 
       if (paymentMethod === 'RAZORPAY') {
-        await handleRazorpayPayment(order.id)
+        await openRazorpayCheckout({ orderId: order.id, user })
         toast.success('🎉 Order placed & payment successful!')
       } else {
         toast.success('🎉 Order placed! Pay on delivery.')
@@ -80,6 +52,7 @@ export default function CartPage() {
       navigate(`/orders/${order.id}`)
     } catch (err) {
       if (err.message === 'Payment cancelled') toast.error('Payment cancelled')
+      else if (err.message === 'Unable to load Razorpay checkout') toast.error('Razorpay checkout could not load. Please check your network and try again.')
       else toast.error(err.response?.data?.message || 'Failed to place order')
     } finally { setPlacing(false) }
   }

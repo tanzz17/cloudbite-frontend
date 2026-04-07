@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { customerAPI } from '../../services/api'
 import { StatusBadge, EmptyState } from '../../components/common/index'
+import { useAuth } from '../../context/AuthContext'
 import { formatCurrency, formatDate, timeAgo, getStepIndex, TRACKING_STEPS } from '../../utils/helpers'
 import { useWebSocket } from '../../hooks/useWebSocket'
+import { openRazorpayCheckout } from '../../utils/razorpay'
 import toast from 'react-hot-toast'
 
 const asArray = (value) => Array.isArray(value) ? value : []
@@ -58,9 +60,11 @@ export function CustomerOrders() {
 export function OrderDetail() {
   const { orderId } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [partnerLocation, setPartnerLocation] = useState(null)
+  const [retryingPayment, setRetryingPayment] = useState(false)
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -71,6 +75,21 @@ export function OrderDetail() {
   }, [orderId])
 
   useEffect(() => { fetchOrder() }, [])
+
+  const handleRetryPayment = async () => {
+    if (!order) return
+    setRetryingPayment(true)
+    try {
+      await openRazorpayCheckout({ orderId: order.id, user, onSuccess: fetchOrder })
+      toast.success('Payment completed successfully!')
+    } catch (err) {
+      if (err.message === 'Payment cancelled') toast.error('Payment cancelled')
+      else if (err.message === 'Unable to load Razorpay checkout') toast.error('Razorpay checkout could not load. Please check your network and try again.')
+      else toast.error(err.message || 'Payment failed. Please try again.')
+    } finally {
+      setRetryingPayment(false)
+    }
+  }
 
   // Real-time status updates
   useWebSocket(order ? [
@@ -206,6 +225,11 @@ export function OrderDetail() {
                 <span>Total</span><span className="text-orange-600 dark:text-orange-400">{formatCurrency(order.totalAmount)}</span>
               </div>
             </div>
+            {order.paymentMethod === 'RAZORPAY' && order.paymentStatus !== 'COMPLETED' && (
+              <button onClick={handleRetryPayment} disabled={retryingPayment} className="btn-primary mt-4 flex items-center justify-center gap-2 px-5 py-3 text-sm">
+                {retryingPayment ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Opening payment...</> : 'Complete Payment'}
+              </button>
+            )}
           </div>
         </div>
 
