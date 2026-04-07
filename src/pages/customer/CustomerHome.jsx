@@ -60,9 +60,9 @@ const KitchenCard = ({ kitchen, onClick, index }) => (
   <div onClick={onClick}
     className="group relative bg-white dark:bg-[#1a1108] rounded-3xl overflow-hidden border border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-2xl hover:shadow-amber-400/10 hover:-translate-y-2 transition-all duration-400 cursor-pointer animate-slide-up"
     style={{ animationDelay: `${index * 0.07}s` }}>
-    <div className="relative h-44 overflow-hidden">
+    <div className="relative h-32 overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950/40 dark:to-orange-950/30">
       {kitchen.coverImage
-        ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-700" />
         : <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-7xl">🍽️</div>}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       <div className="absolute top-3 left-3">
