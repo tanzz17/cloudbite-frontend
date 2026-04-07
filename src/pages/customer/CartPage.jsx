@@ -45,7 +45,7 @@ export default function CartPage() {
       if (paymentMethod === 'RAZORPAY') {
         await fetchCart()
         toast.success('Redirecting to Razorpay...')
-        await startRazorpayRedirectCheckout({ orderId: order.id, user })
+        await startRazorpayRedirectCheckout({ orderId: order.id })
         return
       } else {
         toast.success('🎉 Order placed! Pay on delivery.')
@@ -53,7 +53,7 @@ export default function CartPage() {
       await fetchCart()
       navigate(`/orders/${order.id}`)
     } catch (err) {
-      if (err.message === 'Unable to load Razorpay checkout') toast.error('Razorpay checkout could not load. Please check your network and try again.')
+      if (err.message === 'Payment link could not be created') toast.error('Payment link could not be created. Please try again.')
       else toast.error(err.response?.data?.message || 'Failed to place order')
     } finally { setPlacing(false) }
   }
