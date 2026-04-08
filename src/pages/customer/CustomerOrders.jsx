@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
-import { customerAPI, paymentAPI } from '../../services/api'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { customerAPI } from '../../services/api'
 import { StatusBadge, EmptyState } from '../../components/common/index'
+import { useAuth } from '../../context/AuthContext'
 import { formatCurrency, formatDate, timeAgo, getStepIndex, TRACKING_STEPS } from '../../utils/helpers'
 import { useWebSocket } from '../../hooks/useWebSocket'
-import { startRazorpayRedirectCheckout } from '../../utils/razorpay'
+import { openRazorpayCheckout } from '../../utils/razorpay'
 import toast from 'react-hot-toast'
 
 const asArray = (value) => Array.isArray(value) ? value : []
@@ -59,7 +60,7 @@ export function CustomerOrders() {
 export function OrderDetail() {
   const { orderId } = useParams()
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { user } = useAuth()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [partnerLocation, setPartnerLocation] = useState(null)
@@ -75,41 +76,15 @@ export function OrderDetail() {
 
   useEffect(() => { fetchOrder() }, [])
 
-  useEffect(() => {
-    const payment = searchParams.get('payment')
-    if (!payment) return
-
-    const syncPayment = async () => {
-      try {
-        if (payment === 'processing') {
-          const { data } = await paymentAPI.syncPaymentStatus(orderId)
-          await fetchOrder()
-          if (data.paid) toast.success('Payment completed successfully!')
-          else toast.error('Payment is still pending or failed. Please try again.')
-        } else if (payment === 'failed') {
-          toast.error(searchParams.get('reason') || 'Payment failed. Please try again.')
-        } else if (payment === 'success') {
-          await fetchOrder()
-          toast.success('Payment completed successfully!')
-        }
-      } catch (err) {
-        toast.error(err.response?.data?.message || 'Unable to confirm payment status.')
-      } finally {
-        setSearchParams({}, { replace: true })
-      }
-    }
-
-    syncPayment()
-  }, [fetchOrder, orderId, searchParams, setSearchParams])
-
   const handleRetryPayment = async () => {
     if (!order) return
     setRetryingPayment(true)
     try {
-      toast.success('Redirecting to Razorpay...')
-      await startRazorpayRedirectCheckout({ orderId: order.id })
+      await openRazorpayCheckout({ orderId: order.id, user, onSuccess: fetchOrder })
+      toast.success('Payment completed successfully!')
     } catch (err) {
-      if (err.message === 'Payment link could not be created') toast.error('Payment link could not be created. Please try again.')
+      if (err.message === 'Payment cancelled') toast.error('Payment cancelled')
+      else if (err.message === 'Unable to load Razorpay checkout') toast.error('Razorpay checkout could not load. Please check your network and try again.')
       else toast.error(err.message || 'Payment failed. Please try again.')
     } finally {
       setRetryingPayment(false)

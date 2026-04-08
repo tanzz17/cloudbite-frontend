@@ -104,7 +104,6 @@ export const deliveryAPI = {
 // ==================== PAYMENT ====================
 export const paymentAPI = {
   createOrder: (orderId) => api.post('/payments/create-order', { orderId }),
-  syncPaymentStatus: (orderId) => api.get(`/payments/orders/${orderId}/sync-status`),
   verifyPayment: (data) => api.post('/payments/verify', data),
 }
 
