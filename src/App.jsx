@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/common/index'
 import { DashboardLayout } from './components/common/DashboardLayout'
 
 // Pages
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 
@@ -29,9 +30,11 @@ import KitchenMenuPage from './pages/customer/KitchenMenuPage'
 import CartPage from './pages/customer/CartPage'
 import { CustomerOrders, OrderDetail } from './pages/customer/CustomerOrders'
 
+import BrowseByDish from './pages/customer/BrowseByDish'
+import CustomerLayout from './components/common/CustomerLayout'
+
 // Delivery
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard'
-import LandingPage from './pages/LandingPage'
 
 export default function App() {
   return (
@@ -87,37 +90,16 @@ export default function App() {
                 <Route path="account" element={<ProfilePage />} />
               </Route>
 
-              {/* ======== CUSTOMER ======== */}
-              <Route path="/home" element={
-                <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                  <CustomerHome />
-                </ProtectedRoute>
-              } />
-              <Route path="/kitchen-menu/:kitchenId" element={
-                <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                  <KitchenMenuPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/cart" element={
-                <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                  <CartPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/orders" element={
-                <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                  <CustomerOrders />
-                </ProtectedRoute>
-              } />
-              <Route path="/orders/:orderId" element={
-                <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                  <OrderDetail />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute allowedRoles={['CUSTOMER']}>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } />
+              {/* ======== CUSTOMER — wrapped in CustomerLayout for global navbar ======== */}
+              <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']}><CustomerLayout /></ProtectedRoute>}>
+                <Route path="/home"                    element={<CustomerHome />} />
+                <Route path="/kitchen-menu/:kitchenId" element={<KitchenMenuPage />} />
+                <Route path="/browse"                  element={<BrowseByDish />} />
+                <Route path="/cart"                    element={<CartPage />} />
+                <Route path="/orders"                  element={<CustomerOrders />} />
+                <Route path="/orders/:orderId"         element={<OrderDetail />} />
+                <Route path="/profile"                 element={<ProfilePage />} />
+              </Route>
 
               {/* ======== DELIVERY PARTNER DASHBOARD ======== */}
               <Route path="/delivery" element={
@@ -132,7 +114,7 @@ export default function App() {
               </Route>
 
               {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </BrowserRouter>
         </CartProvider>

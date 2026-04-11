@@ -7,8 +7,6 @@ import { ThemeToggle } from '../../components/common/index'
 import { formatCurrency } from '../../utils/helpers'
 import toast from 'react-hot-toast'
 
-const asArray = (value) => Array.isArray(value) ? value : []
-
 // ── Maharashtra cuisine slides ────────────────────────────────────────────────
 const CUISINE_SLIDES = [
   { label: 'Breakfast',    emoji: '🌅', desc: 'Start your morning right',  dishes: ['Poha', 'Upma', 'Sabudana Khichdi', 'Thalipeeth'], color: 'from-yellow-400 to-amber-500',  bg: 'from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20' },
@@ -60,9 +58,9 @@ const KitchenCard = ({ kitchen, onClick, index }) => (
   <div onClick={onClick}
     className="group relative bg-white dark:bg-[#1a1108] rounded-3xl overflow-hidden border border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-2xl hover:shadow-amber-400/10 hover:-translate-y-2 transition-all duration-400 cursor-pointer animate-slide-up"
     style={{ animationDelay: `${index * 0.07}s` }}>
-    <div className="relative h-32 overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950/40 dark:to-orange-950/30">
+    <div className="relative h-44 overflow-hidden">
       {kitchen.coverImage
-        ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-700" />
+        ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
         : <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-7xl">🍽️</div>}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       <div className="absolute top-3 left-3">
@@ -92,12 +90,6 @@ const KitchenCard = ({ kitchen, onClick, index }) => (
         <span className="text-xs font-body text-gray-400">Min. {formatCurrency(kitchen.minOrderAmount)}</span>
         <span className="text-xs font-body font-bold text-amber-600 dark:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Menu →</span>
       </div>
-      {kitchen.matchingDishes?.length > 0 && (
-        <p className="mt-2 text-[11px] font-body text-amber-700 dark:text-amber-300 truncate">
-          {kitchen.matchingDishes.length > 1 ? 'Matching dishes: ' : 'Matching dish: '}
-          {kitchen.matchingDishes.join(', ')}
-        </p>
-      )}
     </div>
   </div>
 )
@@ -131,14 +123,13 @@ export default function CustomerHome() {
   useEffect(() => {
     customerAPI.getKitchens()
       .then(async r => {
-        const kitchensData = asArray(r.data)
-        setKitchens(kitchensData)
+        setKitchens(r.data)
         const menus = await Promise.all(
-          kitchensData.map(k => customerAPI.getMenu(k.id).then(m => asArray(m.data).map(item => ({ ...item, kitchenId: k.id }))).catch(() => []))
+          r.data.slice(0, 6).map(k => customerAPI.getMenu(k.id).then(m => m.data.map(item => ({ ...item, kitchenId: k.id }))).catch(() => []))
         )
         setAllMenuItems(menus.flat())
       })
-      .catch(() => toast.error('Failed to load kitchens'))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
@@ -153,18 +144,14 @@ export default function CustomerHome() {
     if (!search.trim()) { setSearchResults(null); return }
     searchTimeout.current = setTimeout(async () => {
       setSearchLoading(true)
-      try { const { data } = await customerAPI.searchKitchens(search); setSearchResults(asArray(data)) }
+      try { const { data } = await customerAPI.searchKitchens(search); setSearchResults(data) }
       catch { }
       finally { setSearchLoading(false) }
     }, 400)
   }, [search])
 
   const displayed = searchResults
-    ?? (cuisineFilter === 'All'
-      ? kitchens
-      : kitchens.filter(k => allMenuItems.some(item =>
-          item.kitchenId === k.id && (item.category || '').toLowerCase() === cuisineFilter.toLowerCase()
-        )))
+    ?? (cuisineFilter === 'All' ? kitchens : kitchens.filter(k => k.cuisineType?.toLowerCase().includes(cuisineFilter.toLowerCase())))
 
   const slide = CUISINE_SLIDES[slideIndex]
 
@@ -221,7 +208,7 @@ export default function CustomerHome() {
                       </button>
                     ))}
                     <div className="border-t border-amber-100 dark:border-amber-900 mt-1 pt-1">
-                      <button onClick={() => { logout(); navigate('/', { replace: true }) }}
+                      <button onClick={() => { logout(); navigate('/login') }}
                         className="w-full text-left px-4 py-2.5 font-body text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
                         🚪 Logout
                       </button>
@@ -269,7 +256,7 @@ export default function CustomerHome() {
                     <span key={d} className="font-body text-xs bg-white/60 dark:bg-white/10 backdrop-blur-sm text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full">{d}</span>
                   ))}
                 </div>
-                <button onClick={() => { setCuisineFilter(slide.label); setSearch('') }}
+                <button onClick={() => navigate(`/browse?category=${slide.label}`)}
                   className={`font-body font-bold text-sm px-5 py-2.5 rounded-xl bg-gradient-to-r ${slide.color} text-white hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200`}>
                   Explore {slide.label} →
                 </button>
@@ -347,7 +334,10 @@ export default function CustomerHome() {
               { key: 'Desserts',    icon: '🍮' },
             ].map(({ key, icon }) => (
               <button key={key}
-                onClick={() => { setCuisineFilter(key); setSearch(''); setSearchResults(null) }}
+                onClick={() => {
+                  if (key !== 'All') { navigate(\`/browse?category=\${key}\`); return }
+                  setCuisineFilter(key); setSearch(''); setSearchResults(null)
+                }}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-body font-bold text-sm whitespace-nowrap flex-shrink-0 transition-all duration-300 ${
                   cuisineFilter === key
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-400/30 scale-105'
@@ -385,7 +375,7 @@ export default function CustomerHome() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayed.map((kitchen, i) => (
-                <KitchenCard key={kitchen.id} kitchen={{ ...kitchen, matchingDishes: cuisineFilter === 'All' ? [] : allMenuItems.filter(item => item.kitchenId === kitchen.id && (item.category || '').toLowerCase() === cuisineFilter.toLowerCase()).slice(0, 2).map(item => item.name) }} index={i}
+                <KitchenCard key={kitchen.id} kitchen={kitchen} index={i}
                   onClick={() => navigate(`/kitchen-menu/${kitchen.id}`)} />
               ))}
             </div>
