@@ -35,11 +35,18 @@ const getRecommendations = (cartItems, allMenuItems) => {
 
 const loadRazorpay = () => new Promise(resolve => {
   if (window.Razorpay) { resolve(true); return }
+  const existing = document.querySelector('script[src*="razorpay.com"]')
+  if (existing && !window.Razorpay) {
+    setTimeout(() => resolve(!!window.Razorpay), 1000)
+    return
+  }
   const s = document.createElement('script')
   s.src = 'https://checkout.razorpay.com/v1/checkout.js'
+  s.async = true
   s.onload = () => resolve(true)
   s.onerror = () => resolve(false)
-  document.body.appendChild(s)
+  document.head.appendChild(s)
+  setTimeout(() => resolve(!!window.Razorpay), 4000)
 })
 
 export default function CartPage() {
@@ -108,6 +115,14 @@ export default function CartPage() {
           contact: user?.phone || data.customerPhone || '' 
         },
         theme:        { color: '#f59e0b' },
+        modal: {
+          ondismiss: async () => {
+            await paymentAPI.markPaymentFailed(orderId, 'Payment cancelled by user')
+            reject(new Error('cancelled'))
+          },
+          backdropclose: false,
+          escape: false,
+        },
         handler: async (resp) => {
           try {
             const v = await paymentAPI.verifyPayment({
@@ -119,9 +134,11 @@ export default function CartPage() {
             v.data?.success ? resolve(true) : reject(new Error('Verification failed'))
           } catch { reject(new Error('Verification failed')) }
         },
-        modal: { ondismiss: () => reject(new Error('cancelled')) },
       })
-      rzp.on('payment.failed', r => reject(new Error(r.error?.description || 'Payment failed')))
+      rzp.on('payment.failed', async (r) => {
+        await paymentAPI.markPaymentFailed(orderId, r.error?.description || 'Payment failed')
+        reject(new Error(r.error?.description || 'Payment failed'))
+      })
       rzp.open()
     })
   }

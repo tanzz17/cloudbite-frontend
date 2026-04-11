@@ -225,11 +225,6 @@
   z-index: 0;
 }
 
-/* Razorpay modal fix */
-.razorpay-backdrop {
-  z-index: 9999 !important;
-}
-
 /* Loading shimmer */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
