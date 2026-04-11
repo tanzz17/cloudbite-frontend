@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
-import { customerAPI, paymentAPI } from '../../services/api'
+import { customerAPI, paymentAPI, publicAPI } from '../../services/api'
 import { formatCurrency } from '../../utils/helpers'
 import toast from 'react-hot-toast'
 
@@ -33,10 +33,10 @@ const getRecommendations = (cartItems, allMenuItems) => {
   return scored.length ? scored.slice(0, 3) : allMenuItems.filter(m => m.isBestSeller && !cartIds.has(m.id)).slice(0, 3)
 }
 
-const loadRazorpay = () => new Promise(resolve => {
+const loadRazorpay = () => new Promise((resolve, reject) => {
   if (window.Razorpay) { resolve(true); return }
   const existing = document.querySelector('script[src*="razorpay.com"]')
-  if (existing && !window.Razorpay) {
+  if (existing) {
     setTimeout(() => resolve(!!window.Razorpay), 1000)
     return
   }
@@ -44,9 +44,8 @@ const loadRazorpay = () => new Promise(resolve => {
   s.src = 'https://checkout.razorpay.com/v1/checkout.js'
   s.async = true
   s.onload = () => resolve(true)
-  s.onerror = () => resolve(false)
+  s.onerror = () => reject(new Error('Failed to load Razorpay SDK'))
   document.head.appendChild(s)
-  setTimeout(() => resolve(!!window.Razorpay), 4000)
 })
 
 export default function CartPage() {
@@ -61,6 +60,7 @@ export default function CartPage() {
   const [kitchenMenu,      setKitchenMenu]      = useState([])
   const [recommendations,  setRecommendations]  = useState([])
   const [addingId,         setAddingId]         = useState(null)
+  const [isDemoMode,       setIsDemoMode]       = useState(false)
 
   const items      = cart?.items || []
   const kitchen    = cart?.kitchen
@@ -71,6 +71,7 @@ export default function CartPage() {
 
   useEffect(() => {
     if (kitchen?.id) customerAPI.getMenu(kitchen.id).then(r => setKitchenMenu(r.data)).catch(() => {})
+    publicAPI.getPaymentConfig().then(r => setIsDemoMode(r.data?.demoMode || false)).catch(() => {})
   }, [kitchen?.id])
 
   useEffect(() => {
@@ -88,59 +89,90 @@ export default function CartPage() {
   }
 
   const handleRazorpay = async (orderId) => {
-    const { data } = await paymentAPI.createOrder(orderId)
-    
-    if (data.demoMode) {
-      const result = await paymentAPI.completeDemoPayment(orderId)
-      if (result.data.paymentStatus === 'COMPLETED') {
-        return true
+    try {
+      const { data } = await paymentAPI.createOrder(orderId)
+      console.log('Razorpay order created:', data)
+      
+      if (data.demoMode) {
+        const result = await paymentAPI.completeDemoPayment(orderId)
+        if (result.data.paymentStatus === 'COMPLETED') {
+          return true
+        }
+        throw new Error('Demo payment failed')
       }
-      throw new Error('Demo payment failed')
-    }
-    
-    const ok = await loadRazorpay()
-    if (!ok) throw new Error('Razorpay SDK failed to load. Check internet connection.')
-    
-    return new Promise((resolve, reject) => {
-      const rzp = new window.Razorpay({
-        key:          data.keyId,
-        amount:       Math.round(data.amount * 100),
-        currency:     data.currency || 'INR',
-        name:         'CloudBite 🍽️',
-        description:  `Order ${data.orderNumber}`,
-        order_id:     data.razorpayOrderId,
-        prefill:      { 
-          name: user?.name || data.customerName || '', 
-          email: user?.email || data.customerEmail || '', 
-          contact: user?.phone || data.customerPhone || '' 
-        },
-        theme:        { color: '#f59e0b' },
-        modal: {
-          ondismiss: async () => {
-            await paymentAPI.markPaymentFailed(orderId, 'Payment cancelled by user')
-            reject(new Error('cancelled'))
+      
+      if (!data.razorpayOrderId) {
+        throw new Error('Failed to create Razorpay order. Please try again.')
+      }
+      
+      await loadRazorpay()
+      
+      return new Promise((resolve, reject) => {
+        const options = {
+          key: data.keyId,
+          amount: Math.round(data.amount * 100),
+          currency: data.currency || 'INR',
+          name: 'CloudBite',
+          description: `Order ${data.orderNumber}`,
+          order_id: data.razorpayOrderId,
+          prefill: {
+            name: user?.name || data.customerName || '',
+            email: user?.email || data.customerEmail || '',
+            contact: user?.phone || data.customerPhone || ''
           },
-          backdropclose: false,
-          escape: false,
-        },
-        handler: async (resp) => {
+          theme: { color: '#f97316' },
+          handler: async (response) => {
+            console.log('Payment successful:', response)
+            try {
+              const v = await paymentAPI.verifyPayment({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                orderId,
+              })
+              if (v.data?.success) {
+                resolve(true)
+              } else {
+                await paymentAPI.markPaymentFailed(orderId, 'Payment verification failed')
+                reject(new Error('Payment verification failed'))
+              }
+            } catch (err) {
+              console.error('Verification error:', err)
+              await paymentAPI.markPaymentFailed(orderId, 'Payment verification failed')
+              reject(new Error('Payment verification failed'))
+            }
+          },
+          modal: {
+            ondismiss: async () => {
+              console.log('Payment modal dismissed')
+              try {
+                await paymentAPI.markPaymentFailed(orderId, 'Payment cancelled by user')
+              } catch (e) {
+                console.error('Failed to mark payment as failed:', e)
+              }
+              reject(new Error('cancelled'))
+            }
+          }
+        }
+        
+        const rzp = new window.Razorpay(options)
+        
+        rzp.on('payment.failed', async (response) => {
+          console.log('Payment failed:', response.error)
           try {
-            const v = await paymentAPI.verifyPayment({
-              razorpayOrderId:   resp.razorpay_order_id,
-              razorpayPaymentId: resp.razorpay_payment_id,
-              razorpaySignature: resp.razorpay_signature,
-              orderId,
-            })
-            v.data?.success ? resolve(true) : reject(new Error('Verification failed'))
-          } catch { reject(new Error('Verification failed')) }
-        },
+            await paymentAPI.markPaymentFailed(orderId, response.error?.description || 'Payment failed')
+          } catch (e) {
+            console.error('Failed to mark payment as failed:', e)
+          }
+          reject(new Error(response.error?.description || 'Payment failed'))
+        })
+        
+        rzp.open()
       })
-      rzp.on('payment.failed', async (r) => {
-        await paymentAPI.markPaymentFailed(orderId, r.error?.description || 'Payment failed')
-        reject(new Error(r.error?.description || 'Payment failed'))
-      })
-      rzp.open()
-    })
+    } catch (err) {
+      console.error('Razorpay error:', err)
+      throw err
+    }
   }
 
   const handleCheckout = async () => {
@@ -192,6 +224,11 @@ export default function CartPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 pb-10">
+      {isDemoMode && (
+        <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-xl text-sm text-yellow-800 dark:text-yellow-200">
+          ⚠️ <strong>Demo Mode:</strong> Payments are simulated. Set <code className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">DEMO_MODE=false</code> in backend to enable real Razorpay payments.
+        </div>
+      )}
       <h1 className="font-display text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">🛒 Your Cart</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

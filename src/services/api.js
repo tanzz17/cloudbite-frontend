@@ -118,6 +118,8 @@ export const publicAPI = {
   getKitchen: (id) => api.get(`/public/kitchens/${id}`),
   getMenu: (id) => api.get(`/public/kitchens/${id}/menu`),
   getPartnerLocation: (partnerId) => api.get(`/public/delivery/${partnerId}/location`),
+  getPaymentConfig: () => api.get('/public/payment-config'),
+  testRazorpay: () => api.get('/public/test-razorpay'),
 }
 
 // ==================== PROFILE ====================
