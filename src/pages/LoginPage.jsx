@@ -49,15 +49,6 @@ export default function LoginPage() {
             Supporting cloud kitchens and home cooks who bring authentic meals straight to your door.
           </p>
         </div>
-
-        <div className="relative z-10 flex gap-6">
-          {['500+ Kitchens', '10K+ Orders', '4.8★ Rating'].map(stat => (
-            <div key={stat} className="text-center">
-              <p className="text-white font-display font-bold text-lg">{stat.split(' ')[0]}</p>
-              <p className="text-white/70 font-body text-xs">{stat.split(' ').slice(1).join(' ')}</p>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Right - Login Form */}

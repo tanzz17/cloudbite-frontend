@@ -125,13 +125,6 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   const [activeSlide, setActiveSlide] = useState(0)
 
-  // Stats section
-  const [statsRef, statsInView] = useInView()
-  const kitchens  = useCounter(150, 2200, statsInView)
-  const orders    = useCounter(12000, 2500, statsInView)
-  const customers = useCounter(8500, 2300, statsInView)
-  const cities    = useCounter(12, 1800, statsInView)
-
   // Dish carousel auto-rotate
   useEffect(() => {
     const t = setInterval(() => setActiveSlide(p => (p + 1) % MAHARASHTRA_DISHES.length), 3000)
@@ -256,19 +249,6 @@ export default function LandingPage() {
                 I'm a Kitchen Owner
               </button>
             </div>
-
-            {/* Trust badges */}
-            <div className="flex flex-wrap items-center gap-6 mt-10">
-              {[['🏠', '150+', 'Home Kitchens'], ['🛵', '12K+', 'Orders Delivered'], ['⭐', '4.8', 'Avg Rating']].map(([icon, val, label]) => (
-                <div key={label} className="flex items-center gap-2">
-                  <span className="text-xl">{icon}</span>
-                  <div>
-                    <p className="font-display font-bold text-amber-700 dark:text-amber-400 text-lg leading-none">{val}</p>
-                    <p className="font-body text-xs text-gray-500 dark:text-gray-400">{label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Right: dish carousel */}
@@ -325,28 +305,6 @@ export default function LandingPage() {
           <div className="w-6 h-10 rounded-full border-2 border-amber-400 flex items-start justify-center p-1">
             <div className="w-1.5 h-3 bg-amber-400 rounded-full animate-bounce" />
           </div>
-        </div>
-      </section>
-
-      {/* ── STATS SECTION ────────────────────────────────────── */}
-      <section ref={statsRef} className="py-20 bg-gradient-to-r from-amber-500 to-orange-500 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='white' fill-opacity='1'%3E%3Ccircle cx='20' cy='20' r='3'/%3E%3C/g%3E%3C/svg%3E")` }} />
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {[
-            { val: kitchens, suffix: '+', label: 'Cloud Kitchens', icon: '🏠' },
-            { val: orders, suffix: '+', label: 'Orders Delivered', icon: '🛵' },
-            { val: customers, suffix: '+', label: 'Happy Customers', icon: '😊' },
-            { val: cities, suffix: '', label: 'Cities in Maharashtra', icon: '📍' },
-          ].map(({ val, suffix, label, icon }) => (
-            <div key={label} className="text-white">
-              <div className="text-4xl mb-2">{icon}</div>
-              <div className="font-display text-4xl md:text-5xl font-bold mb-1">
-                {val.toLocaleString()}{suffix}
-              </div>
-              <div className="font-body text-sm text-white/80">{label}</div>
-            </div>
-          ))}
         </div>
       </section>
 
