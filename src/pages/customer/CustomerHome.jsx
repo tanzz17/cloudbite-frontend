@@ -335,7 +335,7 @@ export default function CustomerHome() {
             ].map(({ key, icon }) => (
               <button key={key}
                 onClick={() => {
-                  if (key !== 'All') { navigate(\`/browse?category=\${key}\`); return }
+                  if (key !== 'All') { navigate(`/browse?category=${key}`); return }
                   setCuisineFilter(key); setSearch(''); setSearchResults(null)
                 }}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-body font-bold text-sm whitespace-nowrap flex-shrink-0 transition-all duration-300 ${
