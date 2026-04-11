@@ -111,13 +111,13 @@ const KitchenCard = ({ kitchen, onClick, index }) => {
       </div>
       <div className="p-5">
         <div className="flex items-center gap-3 text-xs font-body mb-3">
-          <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-            <span className="text-yellow-500">★</span> {kitchen.rating?.toFixed(1) || 'New'}
+          <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span>⏱️</span> {kitchen.estimatedDeliveryTime || 30} min
           </span>
           <span className="text-gray-300 dark:text-gray-600">•</span>
-          <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">⏱️ {kitchen.estimatedDeliveryTime || 30} min</span>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
-          <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">🚚 {formatCurrency(kitchen.deliveryFee)}</span>
+          <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span>🚚</span> {formatCurrency(kitchen.deliveryFee)}
+          </span>
         </div>
         <p className="font-display font-bold text-lg text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
           {kitchen.name}
@@ -416,12 +416,11 @@ export default function CustomerHome() {
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-xl shadow-lg">⚡</div>
             <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Quick Filters</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
               { icon: '🚀', title: 'Fast Delivery', desc: 'Under 30 mins', color: 'from-green-400 to-emerald-500' },
-              { icon: '⭐', title: 'Top Rated', desc: '4.0+ rating', color: 'from-yellow-400 to-amber-500' },
-              { icon: '💰', title: 'Low Fees', desc: 'Free delivery', color: 'from-violet-400 to-purple-500' },
-              { icon: '🔥', title: 'Near You', desc: 'Closest kitchens', color: 'from-rose-400 to-pink-500' },
+              { icon: '💰', title: 'Min Order', desc: 'Orders above ₹99', color: 'from-violet-400 to-purple-500' },
+              { icon: '🌿', title: 'Pure Veg', desc: 'Vegetarian only', color: 'from-emerald-400 to-teal-500' },
             ].map((filter, i) => (
               <button
                 key={filter.title}
