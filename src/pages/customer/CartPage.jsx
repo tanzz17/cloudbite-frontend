@@ -81,9 +81,19 @@ export default function CartPage() {
   }
 
   const handleRazorpay = async (orderId) => {
+    const { data } = await paymentAPI.createOrder(orderId)
+    
+    if (data.demoMode) {
+      const result = await paymentAPI.completeDemoPayment(orderId)
+      if (result.data.paymentStatus === 'COMPLETED') {
+        return true
+      }
+      throw new Error('Demo payment failed')
+    }
+    
     const ok = await loadRazorpay()
     if (!ok) throw new Error('Razorpay SDK failed to load. Check internet connection.')
-    const { data } = await paymentAPI.createOrder(orderId)
+    
     return new Promise((resolve, reject) => {
       const rzp = new window.Razorpay({
         key:          data.keyId,
