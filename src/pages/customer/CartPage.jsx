@@ -125,17 +125,26 @@ export default function CartPage() {
         try {
           await handleRazorpay(order.id)
           toast.success('🎉 Payment successful! Order placed.')
+          await fetchCart()
+          navigate(`/orders/${order.id}`)
         } catch (e) {
-          toast.error(e.message === 'cancelled' ? 'Payment cancelled.' : e.message)
-          await fetchCart(); navigate(`/orders/${order.id}`); return
+          if (e.message === 'cancelled') {
+            toast.error('Payment was cancelled. Your order has not been placed.')
+          } else {
+            toast.error('Payment failed. Your order has not been placed. Please try again later.')
+          }
+          await fetchCart()
+          navigate('/home')
+          return
         }
       } else {
         toast.success('🎉 Order placed! Pay on delivery.')
+        await fetchCart()
+        navigate(`/orders/${order.id}`)
       }
-      await fetchCart()
-      navigate(`/orders/${order.id}`)
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to place order')
+      await fetchCart()
     } finally { setPlacing(false) }
   }
 

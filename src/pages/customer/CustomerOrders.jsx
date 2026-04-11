@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 // ── Order status configuration ───────────────────────────────────────────────
 const STATUS_CONFIG = {
   PENDING:              { step:0, label:'Order Placed',       icon:'🛒', color:'text-yellow-600', bg:'bg-yellow-50 dark:bg-yellow-900/20',  desc:'Your order has been received by the kitchen.' },
+  PAYMENT_FAILED:       { step:-1, label:'Payment Failed',    icon:'💳', color:'text-red-600',    bg:'bg-red-50 dark:bg-red-900/20',        desc:'Payment was not completed. Your order has not been placed.' },
   CONFIRMED:            { step:1, label:'Confirmed',          icon:'✅', color:'text-blue-600',   bg:'bg-blue-50 dark:bg-blue-900/20',      desc:'Kitchen has confirmed your order.' },
   PREPARING:            { step:2, label:'Preparing',          icon:'👨‍🍳', color:'text-purple-600', bg:'bg-purple-50 dark:bg-purple-900/20',  desc:'Your food is being freshly prepared.' },
   READY_FOR_PICKUP:     { step:3, label:'Ready for Pickup',   icon:'📦', color:'text-orange-600', bg:'bg-orange-50 dark:bg-orange-900/20',  desc:'Food is ready. Finding a delivery partner.' },
@@ -266,6 +267,7 @@ export function OrderDetail() {
   const isActive = ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY'].includes(order.status)
   const isDelivered = order.status === 'DELIVERED'
   const isCancelled = order.status === 'CANCELLED'
+  const isPaymentFailed = order.status === 'PAYMENT_FAILED'
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-10">
@@ -373,6 +375,23 @@ export function OrderDetail() {
           <div className="text-4xl mb-2">❌</div>
           <p className="font-display font-bold text-red-600">Order Cancelled</p>
           {order.cancellationReason && <p className="text-xs font-body text-gray-500 mt-1">Reason: {order.cancellationReason}</p>}
+        </div>
+      )}
+
+      {/* ── PAYMENT FAILED ────────────────────────────────── */}
+      {isPaymentFailed && (
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800 p-5 mb-4 text-center">
+          <div className="text-5xl mb-3">💳</div>
+          <h3 className="font-display font-bold text-red-600 text-lg">Payment Failed</h3>
+          <p className="font-body text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Your payment was not completed successfully.<br />
+            Your order has <strong>not been placed</strong>. Please try again later.
+          </p>
+          <button
+            onClick={() => navigate('/home')}
+            className="mt-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-body font-bold px-6 py-3 rounded-2xl shadow-lg hover:scale-105 transition-all">
+            Browse Kitchens
+          </button>
         </div>
       )}
 
