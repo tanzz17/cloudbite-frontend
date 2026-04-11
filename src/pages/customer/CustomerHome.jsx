@@ -410,131 +410,46 @@ export default function CustomerHome() {
           )}
         </div>
 
-        {/* Quick Filters */}
-        <div className="animate-fade-in">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-xl shadow-lg">⚡</div>
-            <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Quick Filters</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[
-              { icon: '🚀', title: 'Fast Delivery', desc: 'Under 30 mins', color: 'from-green-400 to-emerald-500' },
-              { icon: '💰', title: 'Min Order', desc: 'Orders above ₹99', color: 'from-violet-400 to-purple-500' },
-              { icon: '🌿', title: 'Pure Veg', desc: 'Vegetarian only', color: 'from-emerald-400 to-teal-500' },
-            ].map((filter, i) => (
-              <button
-                key={filter.title}
-                className="group relative bg-white dark:bg-[#1a1108] rounded-2xl p-5 border border-amber-100 dark:border-amber-900/40 hover:border-amber-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left overflow-hidden"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${filter.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${filter.color} flex items-center justify-center text-2xl mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  {filter.icon}
-                </div>
-                <p className="font-display font-bold text-gray-900 dark:text-white group-hover:text-amber-600 transition-colors">{filter.title}</p>
-                <p className="font-body text-xs text-gray-500 dark:text-gray-400 mt-1">{filter.desc}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Cloud Kitchen Stories / FAQ */}
+        {/* Why CloudBite - Our Story */}
         <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-yellow-950/30 rounded-3xl p-8 md:p-12 border border-amber-200 dark:border-amber-800/40">
           <div className="text-center mb-10">
-            <span className="inline-block font-body text-sm text-amber-600 dark:text-amber-400 mb-2 px-4 py-1 bg-amber-100 dark:bg-amber-900/40 rounded-full">Real Stories</span>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">From Our Cloud Kitchen Partners</h2>
-            <p className="font-body text-gray-500 dark:text-gray-400 mt-3 max-w-2xl mx-auto">We spoke with home cooks across Maharashtra about their journey with CloudBite</p>
+            <span className="inline-block font-body text-sm text-amber-600 dark:text-amber-400 mb-2 px-4 py-1 bg-amber-100 dark:bg-amber-900/40 rounded-full">Our Story</span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Why CloudBite Exists</h2>
+            <p className="font-body text-gray-500 dark:text-gray-400 mt-3 max-w-2xl mx-auto">The problems we saw in the food delivery industry that led us to build something different</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
-              { q: 'How did CloudBite help your home kitchen business?', a: '"CloudBite helped me reach customers I never could before. In my village, word of mouth was my only marketing. Now, people from cities 20km away order my Misal Pav every weekend!"', author: '— Savitribai, Pune', dish: '🍛 Misal Pav Specialist' },
-              { q: 'What challenges did you face as a home cook?', a: '"The biggest challenge was visibility. Big restaurants have marketing budgets and fancy photos. CloudBite levels the playing field — my authentic home recipes compete with everyone else."', author: '— Ramesh K., Nashik', dish: '🌶️ Traditional Recipes' },
-              { q: 'How has CloudBite changed your daily routine?', a: '"I now wake up knowing I have 10-15 orders waiting. It\'s structured my cooking time and reduced food waste. My husband helps with packing now — it\'s become a family business!"', author: '— Sunita M., Kolhapur', dish: '🥘 Home-Style Cooking' },
-              { q: 'What makes your food special on CloudBite?', a: '"I make everything fresh — no pre-cooked items, no frozen ingredients. Customers taste the difference. That\'s why I have regulars who order twice a week."', author: '— Prakash J., Nagpur', dish: '🍲 Fresh & Authentic' },
-            ].map((faq, i) => (
-              <div key={i} className="bg-white/80 dark:bg-[#1a1108]/80 backdrop-blur-sm rounded-2xl p-6 border border-amber-100 dark:border-amber-800/40 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg">💬</span>
-                  <span className="font-display font-bold text-gray-900 dark:text-white">{faq.q}</span>
+              { icon: '👁️', title: 'Lack of Visibility', desc: 'Cloud kitchens struggle to get noticed on big food platforms where restaurants with big marketing budgets dominate. Their authentic home-cooked food stays hidden.' },
+              { icon: '💸', title: 'High Commission Fees', desc: 'Traditional food delivery platforms charge 20-30% commission, eating into the already thin margins of home kitchens. We believe in fair pricing.' },
+              { icon: '🍽️', title: 'No Dedicated Platform', desc: 'Existing platforms cater to restaurants. Cloud kitchens get lost among thousands of dining options. CloudBite is built exclusively for home kitchens.' },
+            ].map((item, i) => (
+              <div key={i} className="bg-white/80 dark:bg-[#1a1108]/80 backdrop-blur-sm rounded-2xl p-6 border border-amber-100 dark:border-amber-800/40 hover:shadow-lg transition-all duration-300 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg">
+                  {item.icon}
                 </div>
-                <p className="font-body text-sm text-gray-600 dark:text-gray-300 italic mb-4 leading-relaxed">{faq.a}</p>
-                <div className="flex items-center justify-between pt-3 border-t border-amber-100 dark:border-amber-800/40">
-                  <span className="font-body text-xs font-semibold text-amber-600 dark:text-amber-400">{faq.author}</span>
-                  <span className="font-body text-xs text-gray-400">{faq.dish}</span>
-                </div>
+                <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-3">{item.title}</h3>
+                <p className="font-body text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
+          <div className="mt-10 text-center">
+            <p className="font-body text-gray-600 dark:text-gray-300 italic">
+              "We built CloudBite to give home cooks a fighting chance — a platform where authentic recipes and passionate cooking are what gets you noticed, not your marketing budget."
+            </p>
+          </div>
         </div>
 
-        {/* Why CloudBite - Trust Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: '🏠', title: '100% Home Kitchen', desc: 'No restaurants, only home cooks' },
-            { icon: '✨', title: 'Freshly Made', desc: 'Every dish cooked to order' },
-            { icon: '🔒', title: 'Safe & Hygiene', desc: 'Follows FSSAI guidelines' },
-            { icon: '❤️', title: 'Made with Love', desc: 'Passion in every bite' },
-          ].map((badge, i) => (
-            <div key={badge.title} className="text-center p-6 bg-white dark:bg-[#1a1108] rounded-2xl border border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700 transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className="text-4xl mb-3">{badge.icon}</div>
-              <p className="font-display font-bold text-gray-900 dark:text-white text-sm">{badge.title}</p>
-              <p className="font-body text-xs text-gray-500 dark:text-gray-400 mt-1">{badge.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-16 pt-12 border-t border-amber-200 dark:border-amber-800/40">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-2xl shadow-lg">🍽️</div>
-                <div>
-                  <p className="font-display font-bold text-xl text-gray-900 dark:text-white">CloudBite</p>
-                  <p className="font-body text-xs text-amber-600 dark:text-amber-400">Where home kitchens shine</p>
-                </div>
-              </div>
-              <p className="font-body text-sm text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed">
-                CloudBite is Maharashtra's exclusive platform for cloud kitchens and home-cooked meals. We connect passionate home cooks with food lovers who crave authentic, homemade food.
-              </p>
-              <div className="flex gap-3 mt-5">
-                {['📘', '📸', '🐦', '📺'].map((icon, i) => (
-                  <button key={i} className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-lg hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors">{icon}</button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="font-display font-bold text-gray-900 dark:text-white mb-4">Quick Links</p>
-              <ul className="space-y-2">
-                {['About Us', 'How It Works', 'For Kitchen Owners', 'Delivery Partner', 'Help & Support'].map((link, i) => (
-                  <li key={link}><button className="font-body text-sm text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">{link}</button></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p className="font-display font-bold text-gray-900 dark:text-white mb-4">Contact Us</p>
-              <ul className="space-y-3">
-                <li className="font-body text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">📧 hello@cloudbite.in</li>
-                <li className="font-body text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">📞 +91 98765 43210</li>
-                <li className="font-body text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">📍 Pune, Maharashtra, India</li>
-              </ul>
-              <div className="mt-5">
-                <p className="font-body text-xs text-gray-400 mb-2">Download App</p>
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-xs font-bold hover:opacity-80 transition-opacity">Google Play</button>
-                  <button className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-xs font-bold hover:opacity-80 transition-opacity">App Store</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-amber-100 dark:border-amber-800/40">
-            <p className="font-body text-xs text-gray-400">© 2024 CloudBite. Made with ❤️ for Maharashtra's home kitchens.</p>
-            <div className="flex gap-4">
-              {['Privacy Policy', 'Terms of Service', 'Refund Policy'].map((link, i) => (
-                <button key={link} className="font-body text-xs text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">{link}</button>
-              ))}
-            </div>
-          </div>
+        {/* Simple Footer */}
+        <div className="mt-16 pt-8 border-t border-amber-200 dark:border-amber-800/40 text-center">
+          <a
+            href="https://cloudbite-ui.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-body text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors hover:underline"
+          >
+            About Us
+          </a>
+          <p className="font-body text-xs text-gray-400 mt-3">© 2024 CloudBite. Made with ❤️ in Maharashtra, India.</p>
         </div>
 
         {/* CTA Banner */}
