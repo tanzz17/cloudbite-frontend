@@ -536,9 +536,8 @@ export default function CustomerHome() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* CTA Banner */}
+        {/* CTA Banner */}
         <div className="relative rounded-3xl overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 animate-gradient-x" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
