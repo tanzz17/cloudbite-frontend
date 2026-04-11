@@ -97,12 +97,16 @@ export default function CartPage() {
     return new Promise((resolve, reject) => {
       const rzp = new window.Razorpay({
         key:          data.keyId,
-        amount:       Math.round(total * 100),
-        currency:     'INR',
+        amount:       Math.round(data.amount * 100),
+        currency:     data.currency || 'INR',
         name:         'CloudBite 🍽️',
-        description:  'Home-cooked food order',
+        description:  `Order ${data.orderNumber}`,
         order_id:     data.razorpayOrderId,
-        prefill:      { name: user?.name || '', email: user?.email || '', contact: user?.phone || '' },
+        prefill:      { 
+          name: user?.name || data.customerName || '', 
+          email: user?.email || data.customerEmail || '', 
+          contact: user?.phone || data.customerPhone || '' 
+        },
         theme:        { color: '#f59e0b' },
         handler: async (resp) => {
           try {
