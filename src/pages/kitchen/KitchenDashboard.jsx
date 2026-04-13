@@ -47,7 +47,7 @@ export default function KitchenDashboard() {
     CONFIRMED: orders.filter(o => o.status === 'CONFIRMED'),
     PREPARING: orders.filter(o => o.status === 'PREPARING'),
     WAITING_FOR_PARTNER: orders.filter(o => o.status === 'WAITING_FOR_PARTNER' || o.status === 'READY_FOR_PICKUP'),
-    OUT_FOR_DELIVERY: orders.filter(o => o.status === 'OUT_FOR_DELIVERY' || o.status === 'HANDOVER' || o.status === 'PARTNER_ASSIGNED'),
+    WITH_RIDER: orders.filter(o => ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY','PICKED_UP'].includes(o.status)),
     DELIVERED: orders.filter(o => o.status === 'DELIVERED'),
   }
 

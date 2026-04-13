@@ -13,9 +13,10 @@ const STATUS_CONFIG = {
   PREPARING:            { step:2, label:'Preparing',          icon:'👨‍🍳', color:'text-purple-600', bg:'bg-purple-50 dark:bg-purple-900/20',  desc:'Your food is being freshly prepared.' },
   READY_FOR_PICKUP:     { step:3, label:'Ready for Pickup',   icon:'📦', color:'text-orange-600', bg:'bg-orange-50 dark:bg-orange-900/20',  desc:'Food is ready. Finding a delivery partner.' },
   WAITING_FOR_PARTNER:  { step:3, label:'Finding Rider',      icon:'🔍', color:'text-orange-600', bg:'bg-orange-50 dark:bg-orange-900/20',  desc:'Looking for an available delivery partner.' },
-  PARTNER_ASSIGNED:     { step:4, label:'Rider Assigned',     icon:'🛵', color:'text-indigo-600', bg:'bg-indigo-50 dark:bg-indigo-900/20',  desc:'A delivery partner has been assigned to your order.' },
-  HANDOVER:             { step:4, label:'Picked Up',          icon:'🤝', color:'text-indigo-600', bg:'bg-indigo-50 dark:bg-indigo-900/20',  desc:'Order has been picked up by the rider.' },
-  OUT_FOR_DELIVERY:     { step:5, label:'Out for Delivery',   icon:'🛵', color:'text-green-600',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Your rider is on the way to you!' },
+  PARTNER_ASSIGNED:     { step:4, label:'Rider Assigned',     icon:'🛵', color:'text-indigo-600', bg:'bg-indigo-50 dark:bg-indigo-900/20',  desc:'Your rider has accepted the order.' },
+  HANDOVER:             { step:4, label:'Handover',          icon:'🤝', color:'text-indigo-600', bg:'bg-indigo-50 dark:bg-indigo-900/20',  desc:'Food handed to rider at kitchen.' },
+  OUT_FOR_DELIVERY:     { step:5, label:'Trip Started',      icon:'🛵', color:'text-blue-600',   bg:'bg-blue-50 dark:bg-blue-900/20',      desc:'Your rider has started the trip!' },
+  PICKED_UP:            { step:5, label:'Picked Up',          icon:'🍔', color:'text-green-600',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Your food has been picked up!' },
   DELIVERED:            { step:6, label:'Delivered',          icon:'🎉', color:'text-green-700',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Order delivered! Enjoy your meal.' },
   CANCELLED:            { step:-1, label:'Cancelled',         icon:'❌', color:'text-red-600',    bg:'bg-red-50 dark:bg-red-900/20',        desc:'Order was cancelled.' },
 }
@@ -412,7 +413,7 @@ export function OrderDetail() {
 
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING
   const currentStep = cfg.step
-  const isActive = ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY'].includes(order.status)
+  const isActive = ['PARTNER_ASSIGNED','OUT_FOR_DELIVERY','PICKED_UP'].includes(order.status)
   const isDelivered = order.status === 'DELIVERED'
   const isCancelled = order.status === 'CANCELLED'
   const isPaymentFailed = order.status === 'PAYMENT_FAILED'

@@ -23,7 +23,8 @@ export const ORDER_STATUS_CONFIG = {
   WAITING_FOR_PARTNER: { label: 'Finding Rider',   color: 'badge-pickup',    icon: '🔍', step: 3 },
   PARTNER_ASSIGNED:  { label: 'Rider Assigned',    color: 'badge-pickup',    icon: '🛵', step: 4 },
   HANDOVER:          { label: 'Handover',           color: 'badge-delivery',  icon: '🤝', step: 4 },
-  OUT_FOR_DELIVERY:  { label: 'Out for Delivery',  color: 'badge-delivery',  icon: '🛵', step: 5 },
+  OUT_FOR_DELIVERY:  { label: 'Trip Started',      color: 'badge-delivery',  icon: '🚗', step: 5 },
+  PICKED_UP:         { label: 'Picked Up',         color: 'badge-delivery',  icon: '🍔', step: 5 },
   DELIVERED:         { label: 'Delivered',          color: 'badge-delivered', icon: '🎉', step: 6 },
   CANCELLED:         { label: 'Cancelled',          color: 'badge-cancelled', icon: '❌', step: -1 },
 }
@@ -46,7 +47,7 @@ export const getStepIndex = (status) => {
     PENDING: 0, CONFIRMED: 1, PREPARING: 2,
     READY_FOR_PICKUP: 3, WAITING_FOR_PARTNER: 3,
     PARTNER_ASSIGNED: 4, HANDOVER: 4,
-    OUT_FOR_DELIVERY: 4, DELIVERED: 5
+    OUT_FOR_DELIVERY: 5, PICKED_UP: 5, DELIVERED: 6
   }
   return map[status] ?? 0
 }

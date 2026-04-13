@@ -11,7 +11,7 @@ const STATUS_TABS = [
   { key: 'CONFIRMED', label: 'Confirmed', icon: '✅' },
   { key: 'PREPARING', label: 'Preparing', icon: '👨‍🍳' },
   { key: 'WAITING_FOR_PARTNER', label: 'Waiting Rider', icon: '🔍' },
-  { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', icon: '🛵' },
+  { key: 'WITH_RIDER', label: 'With Rider', icon: '🛵' },
   { key: 'DELIVERED', label: 'Delivered', icon: '🎉' },
   { key: 'CANCELLED', label: 'Cancelled', icon: '❌' },
 ]
@@ -36,7 +36,7 @@ export default function KitchenOrders() {
 
   const filtered = tab === 'ALL' ? orders : orders.filter(o => {
     if (tab === 'WAITING_FOR_PARTNER') return ['WAITING_FOR_PARTNER','READY_FOR_PICKUP'].includes(o.status)
-    if (tab === 'OUT_FOR_DELIVERY') return ['OUT_FOR_DELIVERY','HANDOVER','PARTNER_ASSIGNED'].includes(o.status)
+    if (tab === 'WITH_RIDER') return ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY','PICKED_UP'].includes(o.status)
     return o.status === tab
   })
 
@@ -64,7 +64,6 @@ export default function KitchenOrders() {
       case 'CONFIRMED': actions.push(btn('👨‍🍳 Start Preparing', () => action(kitchenAPI.markPreparing, order.id, 'Order is being prepared!'), 'blue')); break
       case 'PREPARING': actions.push(btn('📦 Mark Ready', () => action(kitchenAPI.markReady, order.id, 'Order ready! Finding rider...'), 'green')); break
       case 'PARTNER_ASSIGNED': actions.push(btn('🤝 Mark Handover', () => action(kitchenAPI.markHandover, order.id, 'Order handed over to rider!'))); break
-      case 'HANDOVER': actions.push(btn('🛵 Out for Delivery', () => action(kitchenAPI.markOutForDelivery, order.id, 'Order is out for delivery!'), 'blue')); break
     }
     if (!['DELIVERED','CANCELLED','OUT_FOR_DELIVERY'].includes(order.status)) {
       actions.push(btn('❌ Cancel', () => setCancelId(order.id), 'red'))
@@ -84,7 +83,7 @@ export default function KitchenOrders() {
         {STATUS_TABS.map(({ key, label, icon }) => {
           const count = key === 'ALL' ? orders.length
             : key === 'WAITING_FOR_PARTNER' ? orders.filter(o => ['WAITING_FOR_PARTNER','READY_FOR_PICKUP'].includes(o.status)).length
-            : key === 'OUT_FOR_DELIVERY' ? orders.filter(o => ['OUT_FOR_DELIVERY','HANDOVER','PARTNER_ASSIGNED'].includes(o.status)).length
+            : key === 'WITH_RIDER' ? orders.filter(o => ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY','PICKED_UP'].includes(o.status)).length
             : orders.filter(o => o.status === key).length
           return (
             <button key={key} onClick={() => setTab(key)}

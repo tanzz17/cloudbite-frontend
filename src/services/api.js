@@ -106,6 +106,8 @@ export const deliveryAPI = {
   getAvailableOrders: () => api.get('/delivery/available-orders'),
   getMyOrders: () => api.get('/delivery/my-orders'),
   acceptOrder: (id) => api.patch(`/delivery/orders/${id}/accept`),
+  startTrip: (id) => api.patch(`/delivery/orders/${id}/start-trip`),
+  pickedUp: (id) => api.patch(`/delivery/orders/${id}/picked-up`),
   markDelivered: (id) => api.patch(`/delivery/orders/${id}/delivered`),
   updateLocation: (data) => api.post('/delivery/location', data),
 }
