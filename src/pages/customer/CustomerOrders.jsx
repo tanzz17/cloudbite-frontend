@@ -22,128 +22,276 @@ const STATUS_CONFIG = {
 
 const STEPS = ['Order Placed','Confirmed','Preparing','Finding Rider','Rider Assigned','Out for Delivery','Delivered']
 
-// ── Animated GPS Map Component ───────────────────────────────────────────────
+// ── Live Map with Leaflet ─────────────────────────────────────────────────────
 const LiveMap = ({ order, partnerLocation, signalLost }) => {
-  const canvasRef = useRef(null)
-  const animRef   = useRef(null)
-  const dotRef    = useRef({ x: 0.3, y: 0.6 })
+  const mapRef = useRef(null)
+  const mapInstanceRef = useRef(null)
+  const riderMarkerRef = useRef(null)
+  const routeLineRef = useRef(null)
+  const prevLocationRef = useRef(null)
+  const [mapReady, setMapReady] = useState(false)
 
-  // Animate rider dot smoothly
+  // Kitchen location (simulated - in real app would come from order)
+  const kitchenLocation = order?.kitchen?.latitude && order?.kitchen?.longitude
+    ? { lat: order.kitchen.latitude, lng: order.kitchen.longitude }
+    : null
+
+  // Customer location from delivery address
+  const customerLocation = order?.deliveryLatitude && order?.deliveryLongitude
+    ? { lat: order.deliveryLatitude, lng: order.deliveryLongitude }
+    : null
+
+  // Initialize map
   useEffect(() => {
-    if (!partnerLocation || !canvasRef.current) return
-    const targetX = 0.3 + Math.random() * 0.4
-    const targetY = 0.3 + Math.random() * 0.4
-    dotRef.current = { x: targetX, y: targetY }
-  }, [partnerLocation])
+    if (mapInstanceRef.current || !mapRef.current) return
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    let frame = 0
+    const initMap = async () => {
+      const L = await import('leaflet')
+      await import('leaflet/dist/leaflet.css')
 
-    const draw = () => {
-      const W = canvas.width, H = canvas.height
-      ctx.clearRect(0, 0, W, H)
+      // Default center (Pune, Maharashtra)
+      const center = customerLocation || kitchenLocation || { lat: 18.5204, lng: 73.8567 }
 
-      // Background grid (map-like)
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.08)'
-      ctx.lineWidth = 1
-      for (let x = 0; x < W; x += 30) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke() }
-      for (let y = 0; y < H; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke() }
+      const map = L.map(mapRef.current, {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView([center.lat, center.lng], 14)
 
-      // Road lines
-      ctx.strokeStyle = 'rgba(209, 213, 219, 0.5)'
-      ctx.lineWidth = 8
-      ctx.lineCap = 'round'
-      // Horizontal road
-      ctx.beginPath(); ctx.moveTo(0, H * 0.5); ctx.lineTo(W, H * 0.5); ctx.stroke()
-      // Vertical road
-      ctx.beginPath(); ctx.moveTo(W * 0.4, 0); ctx.lineTo(W * 0.4, H); ctx.stroke()
-      // Diagonal road
-      ctx.beginPath(); ctx.moveTo(0, H * 0.2); ctx.lineTo(W * 0.4, H * 0.5); ctx.stroke()
+      // Dark/light tile layer
+      const isDark = document.documentElement.classList.contains('dark')
+      const tileUrl = isDark
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
-      // Road dashes
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)'
-      ctx.lineWidth = 2
-      ctx.setLineDash([10, 10])
-      ctx.beginPath(); ctx.moveTo(0, H * 0.5); ctx.lineTo(W, H * 0.5); ctx.stroke()
-      ctx.setLineDash([])
+      L.tileLayer(tileUrl, {
+        maxZoom: 19,
+      }).addTo(map)
 
-      // Destination marker (home)
-      const destX = W * 0.78, destY = H * 0.3
-      ctx.fillStyle = '#ef4444'
-      ctx.beginPath(); ctx.arc(destX, destY, 12, 0, Math.PI * 2); ctx.fill()
-      ctx.fillStyle = 'white'
-      ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-      ctx.fillText('🏠', destX, destY)
-      // Ping animation
-      const ping = Math.abs(Math.sin(frame * 0.05))
-      ctx.strokeStyle = `rgba(239,68,68,${0.4 - ping * 0.3})`
-      ctx.lineWidth = 2
-      ctx.beginPath(); ctx.arc(destX, destY, 12 + ping * 16, 0, Math.PI * 2); ctx.stroke()
+      // Add zoom control to bottom right
+      L.control.zoom({ position: 'bottomright' }).addTo(map)
 
-      // Kitchen marker
-      const kitX = W * 0.18, kitY = H * 0.65
-      ctx.fillStyle = '#f59e0b'
-      ctx.beginPath(); ctx.arc(kitX, kitY, 10, 0, Math.PI * 2); ctx.fill()
-      ctx.fillStyle = 'white'; ctx.font = '12px serif'
-      ctx.fillText('🍽️', kitX, kitY)
+      mapInstanceRef.current = map
 
-      // Route line
-      const rx = dotRef.current.x * W, ry = dotRef.current.y * H
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)'
-      ctx.lineWidth = 3; ctx.setLineDash([6, 4])
-      ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(destX, destY); ctx.stroke()
-      ctx.setLineDash([])
+      // Create custom icons
+      const kitchenIcon = L.divIcon({
+        html: `<div style="background: linear-gradient(135deg, #f59e0b, #ea580c); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); border: 3px solid white;">
+          <span style="font-size: 18px;">🍽️</span>
+        </div>`,
+        className: 'custom-marker',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+      })
 
-      // Rider dot
-      if (!signalLost) {
-        // Glow
-        const grd = ctx.createRadialGradient(rx, ry, 0, rx, ry, 20)
-        grd.addColorStop(0, 'rgba(245,158,11,0.4)')
-        grd.addColorStop(1, 'transparent')
-        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(rx, ry, 20, 0, Math.PI * 2); ctx.fill()
-        // Dot
-        ctx.fillStyle = '#f59e0b'
-        ctx.beginPath(); ctx.arc(rx, ry, 10, 0, Math.PI * 2); ctx.fill()
-        ctx.fillStyle = 'white'; ctx.font = '12px serif'
-        ctx.fillText('🛵', rx, ry)
-      } else {
-        // Signal lost — blinking
-        if (Math.floor(frame / 15) % 2 === 0) {
-          ctx.fillStyle = '#9ca3af'
-          ctx.beginPath(); ctx.arc(rx, ry, 10, 0, Math.PI * 2); ctx.fill()
-          ctx.fillStyle = 'white'; ctx.font = '11px serif'
-          ctx.fillText('?', rx, ry)
+      const customerIcon = L.divIcon({
+        html: `<div style="background: linear-gradient(135deg, #22c55e, #16a34a); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4); border: 3px solid white;">
+          <span style="font-size: 18px;">🏠</span>
+        </div>`,
+        className: 'custom-marker',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+      })
+
+      const riderIcon = L.divIcon({
+        html: `<div style="background: linear-gradient(135deg, #f97316, #ea580c); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(249, 115, 22, 0.5); border: 3px solid white; animation: pulse-rider 1.5s ease-in-out infinite;">
+          <span style="font-size: 22px;">🛵</span>
+        </div>
+        <style>
+          @keyframes pulse-rider {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
+        </style>`,
+        className: 'custom-marker',
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+      })
+
+      // Add kitchen marker
+      if (kitchenLocation) {
+        L.marker([kitchenLocation.lat, kitchenLocation.lng], { icon: kitchenIcon })
+          .addTo(map)
+          .bindPopup('<b>Cloud Kitchen</b><br/>Pickup Location')
+      }
+
+      // Add customer marker
+      if (customerLocation) {
+        L.marker([customerLocation.lat, customerLocation.lng], { icon: customerIcon })
+          .addTo(map)
+          .bindPopup('<b>Delivery Location</b><br/>Your Address')
+
+        // Fit bounds to show both points
+        if (kitchenLocation) {
+          const bounds = L.latLngBounds([
+            [kitchenLocation.lat, kitchenLocation.lng],
+            [customerLocation.lat, customerLocation.lng],
+          ])
+          map.fitBounds(bounds, { padding: [50, 50] })
         }
       }
 
-      frame++
-      animRef.current = requestAnimationFrame(draw)
+      // Create rider marker (initially hidden)
+      if (partnerLocation && !signalLost) {
+        riderMarkerRef.current = L.marker([partnerLocation.lat, partnerLocation.lng], { icon: riderIcon })
+          .addTo(map)
+          .bindPopup('<b>Your Rider</b><br/>On the way!')
+      }
+
+      setMapReady(true)
     }
 
-    animRef.current = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(animRef.current)
-  }, [signalLost])
+    initMap()
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
+    }
+  }, [])
+
+  // Update rider position
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current) return
+
+    const updateRiderPosition = async () => {
+      const L = await import('leaflet')
+
+      if (!partnerLocation || signalLost) {
+        if (riderMarkerRef.current) {
+          mapInstanceRef.current.removeLayer(riderMarkerRef.current)
+          riderMarkerRef.current = null
+        }
+        return
+      }
+
+      const riderIcon = L.divIcon({
+        html: `<div style="background: linear-gradient(135deg, #f97316, #ea580c); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(249, 115, 22, 0.5); border: 3px solid white;">
+          <span style="font-size: 22px;">🛵</span>
+        </div>`,
+        className: 'custom-marker',
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+      })
+
+      if (riderMarkerRef.current) {
+        // Animate to new position
+        riderMarkerRef.current.setLatLng([partnerLocation.lat, partnerLocation.lng])
+      } else {
+        // Create new marker
+        riderMarkerRef.current = L.marker([partnerLocation.lat, partnerLocation.lng], { icon: riderIcon })
+          .addTo(mapInstanceRef.current)
+          .bindPopup('<b>Your Rider</b><br/>On the way!')
+      }
+
+      // Draw/update route line
+      if (routeLineRef.current) {
+        mapInstanceRef.current.removeLayer(routeLineRef.current)
+      }
+
+      // Draw path from kitchen to rider to customer
+      const points = []
+      if (kitchenLocation) points.push([kitchenLocation.lat, kitchenLocation.lng])
+      points.push([partnerLocation.lat, partnerLocation.lng])
+      if (customerLocation) points.push([customerLocation.lat, customerLocation.lng])
+
+      if (points.length >= 2) {
+        routeLineRef.current = L.polyline(points, {
+          color: '#f97316',
+          weight: 4,
+          opacity: 0.8,
+          dashArray: '10, 10',
+        }).addTo(mapInstanceRef.current)
+      }
+
+      // Smooth pan to rider
+      mapInstanceRef.current.panTo([partnerLocation.lat, partnerLocation.lng], { animate: true })
+
+      prevLocationRef.current = partnerLocation
+    }
+
+    updateRiderPosition()
+  }, [partnerLocation, signalLost, mapReady, kitchenLocation, customerLocation])
+
+  // Draw full route when delivered
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current || order?.status !== 'DELIVERED') return
+
+    const drawFullRoute = async () => {
+      const L = await import('leaflet')
+
+      // Final route line
+      if (kitchenLocation && customerLocation) {
+        if (routeLineRef.current) {
+          mapInstanceRef.current.removeLayer(routeLineRef.current)
+        }
+
+        routeLineRef.current = L.polyline([
+          [kitchenLocation.lat, kitchenLocation.lng],
+          [customerLocation.lat, customerLocation.lng],
+        ], {
+          color: '#22c55e',
+          weight: 4,
+          opacity: 0.9,
+        }).addTo(mapInstanceRef.current)
+
+        const bounds = L.latLngBounds([
+          [kitchenLocation.lat, kitchenLocation.lng],
+          [customerLocation.lat, customerLocation.lng],
+        ])
+        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] })
+      }
+    }
+
+    drawFullRoute()
+  }, [order?.status, mapReady])
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-amber-200 dark:border-amber-800">
-      <canvas ref={canvasRef} width={500} height={220}
-        className="w-full h-48 bg-[#fdf8f0] dark:bg-[#1a1108]" />
+      <div ref={mapRef} className="w-full h-64 bg-gray-100 dark:bg-gray-800" />
+      
+      {/* Signal Lost Overlay */}
       {signalLost && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-gray-800/90 text-white text-xs font-body px-3 py-1.5 rounded-full flex items-center gap-2 animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-red-500" />
-          Weak GPS signal — last known location shown
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-red-600/90 text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg z-[1000]">
+          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          Signal Lost — Rider location unavailable
         </div>
       )}
-      <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-white/90 dark:bg-[#1a1108]/90 backdrop-blur-sm px-3 py-1.5 rounded-xl text-xs font-body">
-        <span className={`w-2 h-2 rounded-full ${signalLost ? 'bg-red-500 animate-pulse' : 'bg-green-500 animate-pulse'}`} />
-        {signalLost ? 'GPS Weak' : 'Live Tracking'}
-        {partnerLocation && !signalLost && (
-          <span className="text-gray-400 ml-1">📍 {partnerLocation.lat?.toFixed(4)}, {partnerLocation.lng?.toFixed(4)}</span>
-        )}
+
+      {/* Legend */}
+      <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-3 py-2 rounded-xl shadow-lg z-[1000]">
+        <div className="flex items-center gap-4 text-xs font-body">
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500" />
+            <span className="text-gray-600 dark:text-gray-300">Kitchen</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-green-400 to-emerald-500" />
+            <span className="text-gray-600 dark:text-gray-300">You</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-orange-400 to-orange-500" />
+            <span className="text-gray-600 dark:text-gray-300">Rider</span>
+          </div>
+        </div>
       </div>
+
+      {/* Live indicator */}
+      {!signalLost && partnerLocation && (
+        <div className="absolute top-3 right-3 bg-green-500/90 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg z-[1000]">
+          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          LIVE
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!partnerLocation && !signalLost && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 dark:bg-gray-800/80">
+          <div className="text-center">
+            <div className="text-4xl mb-2 animate-bounce">🛵</div>
+            <p className="font-body text-sm text-gray-500">Waiting for rider to start...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

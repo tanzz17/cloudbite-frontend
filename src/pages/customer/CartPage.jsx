@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { customerAPI, paymentAPI, publicAPI } from '../../services/api'
 import { formatCurrency } from '../../utils/helpers'
 import toast from 'react-hot-toast'
+import AddressModal from '../../components/customer/AddressModal'
 
 // ── Smart add-on recommendation rules ───────────────────────────────────────
 const ADDON_RULES = [
@@ -55,12 +56,21 @@ export default function CartPage() {
 
   const [paymentMethod,    setPaymentMethod]    = useState('COD')
   const [deliveryAddress,  setDeliveryAddress]  = useState(user?.address || '')
+  const [deliveryLat,      setDeliveryLat]      = useState(null)
+  const [deliveryLng,      setDeliveryLng]      = useState(null)
   const [instructions,     setInstructions]     = useState('')
   const [placing,          setPlacing]          = useState(false)
   const [kitchenMenu,      setKitchenMenu]      = useState([])
   const [recommendations,  setRecommendations]  = useState([])
   const [addingId,         setAddingId]         = useState(null)
   const [isDemoMode,       setIsDemoMode]       = useState(false)
+  const [showAddressModal, setShowAddressModal] = useState(false)
+
+  const handleAddressSelect = (address) => {
+    setDeliveryAddress(address.fullAddress)
+    setDeliveryLat(address.latitude)
+    setDeliveryLng(address.longitude)
+  }
 
   const items      = cart?.items || []
   const kitchen    = cart?.kitchen
@@ -182,7 +192,11 @@ export default function CartPage() {
       const { data: order } = await customerAPI.placeOrder({
         kitchenId: kitchen.id,
         items: items.map(i => ({ menuItemId: i.menuItem.id, quantity: i.quantity, specialInstructions: i.specialInstructions || '' })),
-        deliveryAddress, deliveryInstructions: instructions, paymentMethod,
+        deliveryAddress,
+        deliveryLatitude: deliveryLat,
+        deliveryLongitude: deliveryLng,
+        deliveryInstructions: instructions,
+        paymentMethod,
       })
       if (paymentMethod === 'RAZORPAY') {
         try {
@@ -291,9 +305,31 @@ export default function CartPage() {
 
           {/* Address */}
           <div className="p-4 bg-white dark:bg-[#1a1108] rounded-2xl border border-amber-100 dark:border-amber-900/40">
-            <h3 className="font-display font-bold text-gray-900 dark:text-white mb-3">📍 Delivery Address</h3>
-            <textarea value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)} placeholder="House no, Street, Area, City..." className="w-full px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 focus:outline-none font-body text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 resize-none" rows={3} />
-            <input value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Delivery instructions (optional)" className="w-full mt-2 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 focus:border-amber-400 focus:outline-none font-body text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400" />
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display font-bold text-gray-900 dark:text-white flex items-center gap-2">📍 Delivery Address</h3>
+              <button
+                onClick={() => setShowAddressModal(true)}
+                className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
+              >
+                {deliveryAddress ? 'Change' : 'Select Location'}
+              </button>
+            </div>
+            {deliveryAddress ? (
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                <p className="font-body text-sm text-gray-700 dark:text-gray-300">{deliveryAddress}</p>
+                {deliveryLat && deliveryLng && (
+                  <p className="text-xs text-gray-400 mt-1">📍 Location saved</p>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddressModal(true)}
+                className="w-full p-4 border-2 border-dashed border-amber-300 dark:border-amber-700 rounded-xl text-amber-600 dark:text-amber-400 font-body text-sm hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"
+              >
+                + Add Delivery Location
+              </button>
+            )}
+            <input value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Delivery instructions (optional)" className="w-full mt-3 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 focus:border-amber-400 focus:outline-none font-body text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400" />
           </div>
 
           {/* Payment */}
@@ -348,6 +384,13 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      <AddressModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSelect={handleAddressSelect}
+        currentAddress={deliveryAddress}
+      />
     </div>
   )
 }
