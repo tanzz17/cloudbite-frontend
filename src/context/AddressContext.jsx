@@ -8,9 +8,18 @@ export function AddressProvider({ children }) {
   const [addresses, setAddresses] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const userRole = localStorage.getItem('cloudbite_user') 
+    ? JSON.parse(localStorage.getItem('cloudbite_user'))?.role 
+    : null
+  const isCustomer = userRole === 'CUSTOMER'
+
   useEffect(() => {
-    loadDefaultAddress()
-    loadAddresses()
+    if (isCustomer) {
+      loadDefaultAddress()
+      loadAddresses()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const loadDefaultAddress = async () => {
