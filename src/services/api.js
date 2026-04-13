@@ -77,7 +77,10 @@ export const kitchenAPI = {
 
 // ==================== CUSTOMER ====================
 export const customerAPI = {
-  getKitchens: () => api.get('/customer/kitchens'),
+  getKitchens: (lat, lng) => {
+    const params = lat && lng ? `?lat=${lat}&lng=${lng}` : ''
+    return api.get(`/customer/kitchens${params}`)
+  },
   searchKitchens: (q) => api.get(`/customer/kitchens/search?q=${q}`),
   getKitchen: (id) => api.get(`/customer/kitchens/${id}`),
   getMenu: (kitchenId) => api.get(`/customer/kitchens/${kitchenId}/menu`),
@@ -89,6 +92,12 @@ export const customerAPI = {
   getOrders: () => api.get('/customer/orders'),
   getOrder: (id) => api.get(`/customer/orders/${id}`),
   cancelOrder: (id, reason) => api.patch(`/customer/orders/${id}/cancel`, { reason }),
+  getAddresses: () => api.get('/customer/addresses'),
+  getDefaultAddress: () => api.get('/customer/addresses/default'),
+  addAddress: (data) => api.post('/customer/addresses', data),
+  updateAddress: (id, data) => api.put(`/customer/addresses/${id}`, data),
+  setDefaultAddress: (id) => api.patch(`/customer/addresses/${id}/default`),
+  deleteAddress: (id) => api.delete(`/customer/addresses/${id}`),
 }
 
 // ==================== DELIVERY ====================

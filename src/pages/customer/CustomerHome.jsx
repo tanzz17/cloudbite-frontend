@@ -4,6 +4,7 @@ import { customerAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { formatCurrency } from '../../utils/helpers'
+import AddressModal from '../../components/customer/AddressModal'
 
 const CUISINE_SLIDES = [
   { label: 'Breakfast', emoji: '🌅', desc: 'Start your morning right', dishes: ['Poha', 'Upma', 'Sabudana Khichdi', 'Thalipeeth'], color: 'from-yellow-400 to-amber-500', bg: 'from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20', accent: '#f59e0b' },
@@ -110,7 +111,15 @@ const KitchenCard = ({ kitchen, onClick, index }) => {
         </div>
       </div>
       <div className="p-5">
-        <div className="flex items-center gap-3 text-xs font-body mb-3">
+        <div className="flex items-center gap-3 text-xs font-body mb-3 flex-wrap">
+          {kitchen.deliveryRadius && (
+            <>
+              <span className="font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                <span>📍</span> {kitchen.deliveryRadius} km
+              </span>
+              <span className="text-gray-300 dark:text-gray-600">•</span>
+            </>
+          )}
           <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
             <span>⏱️</span> {kitchen.estimatedDeliveryTime || 30} min
           </span>
@@ -195,11 +204,15 @@ export default function CustomerHome() {
   const [cuisineFilter, setCuisineFilter] = useState('All')
   const [slideIndex, setSlideIndex] = useState(0)
   const [heroLoaded, setHeroLoaded] = useState(false)
+  const [showAddressModal, setShowAddressModal] = useState(false)
+  const [userLocation, setUserLocation] = useState(null)
+  const [selectedAddress, setSelectedAddress] = useState(null)
   const searchTimeout = useRef(null)
   const heroRef = useRef(null)
 
   useEffect(() => {
     setHeroLoaded(true)
+    loadDefaultAddress()
   }, [])
 
   useEffect(() => {
@@ -207,22 +220,48 @@ export default function CustomerHome() {
     return () => clearInterval(timer)
   }, [])
 
+  const loadDefaultAddress = async () => {
+    try {
+      const { data } = await customerAPI.getDefaultAddress()
+      if (data) {
+        setSelectedAddress(data)
+        setUserLocation({ lat: data.latitude, lng: data.longitude })
+      } else {
+        setShowAddressModal(true)
+      }
+    } catch {
+      setShowAddressModal(true)
+    }
+  }
+
   useEffect(() => {
-    customerAPI.getKitchens()
-      .then(async (response) => {
-        setKitchens(response.data)
-        const menus = await Promise.all(
-          response.data.slice(0, 6).map((kitchen) =>
-            customerAPI.getMenu(kitchen.id)
-              .then((menu) => menu.data.map((item) => ({ ...item, kitchenId: kitchen.id })))
-              .catch(() => [])
-          )
+    fetchKitchens()
+  }, [userLocation])
+
+  const fetchKitchens = async () => {
+    setLoading(true)
+    try {
+      const response = await customerAPI.getKitchens(userLocation?.lat, userLocation?.lng)
+      setKitchens(response.data)
+      const menus = await Promise.all(
+        response.data.slice(0, 6).map((kitchen) =>
+          customerAPI.getMenu(kitchen.id)
+            .then((menu) => menu.data.map((item) => ({ ...item, kitchenId: kitchen.id })))
+            .catch(() => [])
         )
-        setAllMenuItems(menus.flat())
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+      )
+      setAllMenuItems(menus.flat())
+    } catch (err) {
+      console.error('Failed to fetch kitchens:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddressSelect = (address) => {
+    setSelectedAddress(address)
+    setUserLocation({ lat: address.latitude, lng: address.longitude })
+  }
 
   useEffect(() => { setRecommendations(getRecommendations(cart, allMenuItems)) }, [cart, allMenuItems])
   useEffect(() => { setSearch(searchParams.get('q') || '') }, [searchParams])
@@ -265,12 +304,19 @@ export default function CustomerHome() {
               What's cooking <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">today</span>?
               <span className="inline-block ml-2 text-4xl md:text-5xl animate-wave">👨‍🍳</span>
             </h1>
-            {user?.address && (
-              <p className="font-body text-sm text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Delivering to: <span className="font-semibold text-gray-700 dark:text-gray-300">{user.address}</span>
-              </p>
-            )}
+            <button
+              onClick={() => setShowAddressModal(true)}
+              className="mt-4 flex items-center gap-3 px-4 py-2 bg-white/80 dark:bg-black/40 backdrop-blur-sm rounded-xl border border-amber-200 dark:border-amber-800 hover:bg-white dark:hover:bg-black/50 transition-all group"
+            >
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-sm font-body text-gray-600 dark:text-gray-300">
+                {selectedAddress ? (
+                  <>📍 {selectedAddress.fullAddress.split(',')[0]} <span className="text-gray-400">•</span> <span className="text-amber-600 dark:text-amber-400 group-hover:underline">Change</span></>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400">📍 Select delivery location</span>
+                )}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -473,6 +519,14 @@ export default function CustomerHome() {
           </div>
         </div>
       </div>
+
+      {/* Address Modal */}
+      <AddressModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSelect={handleAddressSelect}
+        currentAddress={selectedAddress?.fullAddress}
+      />
 
       {/* Floating Cart Button */}
       {cartCount > 0 && (
