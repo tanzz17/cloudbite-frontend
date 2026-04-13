@@ -15,7 +15,7 @@ const PAGE_TITLES = {
 export default function GlobalNavbar({ onAddressClick }) {
   const { user, logout } = useAuth()
   const { cartCount } = useCart()
-  const { selectedAddress, addresses } = useAddress()
+  const { selectedAddress, addresses = [] } = useAddress()
   const navigate = useNavigate()
   const location = useLocation()
   const [profileOpen, setProfileOpen] = useState(false)
