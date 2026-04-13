@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { customerAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
+import { useAddress } from '../../context/AddressContext'
 import { formatCurrency } from '../../utils/helpers'
 import AddressModal from '../../components/customer/AddressModal'
 
@@ -205,14 +206,16 @@ export default function CustomerHome() {
   const [slideIndex, setSlideIndex] = useState(0)
   const [heroLoaded, setHeroLoaded] = useState(false)
   const [showAddressModal, setShowAddressModal] = useState(false)
+  const { selectedAddress, selectAddress, refreshAddresses } = useAddress()
   const [userLocation, setUserLocation] = useState(null)
-  const [selectedAddress, setSelectedAddress] = useState(null)
   const searchTimeout = useRef(null)
   const heroRef = useRef(null)
 
   useEffect(() => {
     setHeroLoaded(true)
-    loadDefaultAddress()
+    if (!selectedAddress) {
+      setShowAddressModal(true)
+    }
   }, [])
 
   useEffect(() => {
@@ -220,19 +223,11 @@ export default function CustomerHome() {
     return () => clearInterval(timer)
   }, [])
 
-  const loadDefaultAddress = async () => {
-    try {
-      const { data } = await customerAPI.getDefaultAddress()
-      if (data) {
-        setSelectedAddress(data)
-        setUserLocation({ lat: data.latitude, lng: data.longitude })
-      } else {
-        setShowAddressModal(true)
-      }
-    } catch {
-      setShowAddressModal(true)
+  useEffect(() => {
+    if (selectedAddress?.latitude && selectedAddress?.longitude) {
+      setUserLocation({ lat: selectedAddress.latitude, lng: selectedAddress.longitude })
     }
-  }
+  }, [selectedAddress])
 
   useEffect(() => {
     fetchKitchens()
@@ -258,11 +253,6 @@ export default function CustomerHome() {
     }
   }
 
-  const handleAddressSelect = (address) => {
-    setSelectedAddress(address)
-    setUserLocation({ lat: address.latitude, lng: address.longitude })
-  }
-
   useEffect(() => { setRecommendations(getRecommendations(cart, allMenuItems)) }, [cart, allMenuItems])
   useEffect(() => { setSearch(searchParams.get('q') || '') }, [searchParams])
 
@@ -281,6 +271,11 @@ export default function CustomerHome() {
   const slide = CUISINE_SLIDES[slideIndex]
 
   const particles = ['🌶️', '🍛', '⭐', '🌿', '🍋', '✨'].map((emoji, i) => ({ emoji, x: (i * 17) % 95, y: (i * 23) % 80, delay: i * 0.5 }))
+
+  const handleAddressSelect = (address) => {
+    selectAddress(address)
+    refreshAddresses()
+  }
 
   return (
     <div className="min-h-screen bg-[#fdf8f0] dark:bg-[#0f0a05] transition-colors duration-500">

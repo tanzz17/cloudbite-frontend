@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CartProvider } from './context/CartContext'
+import { AddressProvider } from './context/AddressContext'
 import { ProtectedRoute } from './components/common/index'
 import { DashboardLayout } from './components/common/DashboardLayout'
 
@@ -41,7 +42,8 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <CartProvider>
-          <BrowserRouter>
+          <AddressProvider>
+            <BrowserRouter>
             <Toaster
               position="top-right"
               toastOptions={{
@@ -117,6 +119,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </BrowserRouter>
+          </AddressProvider>
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>

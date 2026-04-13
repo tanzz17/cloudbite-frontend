@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
+import { useAddress } from '../../context/AddressContext'
 import { customerAPI, paymentAPI, publicAPI } from '../../services/api'
 import { formatCurrency } from '../../utils/helpers'
 import toast from 'react-hot-toast'
@@ -52,12 +53,10 @@ const loadRazorpay = () => new Promise((resolve, reject) => {
 export default function CartPage() {
   const { cart, updateItem, clearCart, fetchCart } = useCart()
   const { user } = useAuth()
+  const { selectedAddress, selectAddress, refreshAddresses } = useAddress()
   const navigate  = useNavigate()
 
   const [paymentMethod,    setPaymentMethod]    = useState('COD')
-  const [deliveryAddress,  setDeliveryAddress]  = useState(user?.address || '')
-  const [deliveryLat,      setDeliveryLat]      = useState(null)
-  const [deliveryLng,      setDeliveryLng]      = useState(null)
   const [instructions,     setInstructions]     = useState('')
   const [placing,          setPlacing]          = useState(false)
   const [kitchenMenu,      setKitchenMenu]      = useState([])
@@ -67,9 +66,8 @@ export default function CartPage() {
   const [showAddressModal, setShowAddressModal] = useState(false)
 
   const handleAddressSelect = (address) => {
-    setDeliveryAddress(address.fullAddress)
-    setDeliveryLat(address.latitude)
-    setDeliveryLng(address.longitude)
+    selectAddress(address)
+    refreshAddresses()
   }
 
   const items      = cart?.items || []
@@ -186,15 +184,15 @@ export default function CartPage() {
   }
 
   const handleCheckout = async () => {
-    if (!deliveryAddress.trim()) { toast.error('Enter delivery address'); return }
+    if (!selectedAddress) { toast.error('Please select a delivery address'); setShowAddressModal(true); return }
     setPlacing(true)
     try {
       const { data: order } = await customerAPI.placeOrder({
         kitchenId: kitchen.id,
         items: items.map(i => ({ menuItemId: i.menuItem.id, quantity: i.quantity, specialInstructions: i.specialInstructions || '' })),
-        deliveryAddress,
-        deliveryLatitude: deliveryLat,
-        deliveryLongitude: deliveryLng,
+        deliveryAddress: selectedAddress.fullAddress,
+        deliveryLatitude: selectedAddress.latitude,
+        deliveryLongitude: selectedAddress.longitude,
         deliveryInstructions: instructions,
         paymentMethod,
       })
@@ -311,13 +309,20 @@ export default function CartPage() {
                 onClick={() => setShowAddressModal(true)}
                 className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
               >
-                {deliveryAddress ? 'Change' : 'Select Location'}
+                {selectedAddress ? 'Change' : 'Select Location'}
               </button>
             </div>
-            {deliveryAddress ? (
+            {selectedAddress ? (
               <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                <p className="font-body text-sm text-gray-700 dark:text-gray-300">{deliveryAddress}</p>
-                {deliveryLat && deliveryLng && (
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm">{selectedAddress.label === 'Home' ? '🏠' : selectedAddress.label === 'Office' ? '🏢' : '📍'}</span>
+                  <span className="font-body font-bold text-sm text-gray-700 dark:text-gray-300">{selectedAddress.label}</span>
+                  {selectedAddress.receiverName && (
+                    <span className="text-xs text-gray-500">• {selectedAddress.receiverName}</span>
+                  )}
+                </div>
+                <p className="font-body text-sm text-gray-600 dark:text-gray-400">{selectedAddress.fullAddress}</p>
+                {selectedAddress.latitude && selectedAddress.longitude && (
                   <p className="text-xs text-gray-400 mt-1">📍 Location saved</p>
                 )}
               </div>

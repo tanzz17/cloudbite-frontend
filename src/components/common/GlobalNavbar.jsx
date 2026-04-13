@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
+import { useAddress } from '../../context/AddressContext'
 import { ThemeToggle } from './index'
 
 const PAGE_TITLES = {
@@ -11,14 +12,16 @@ const PAGE_TITLES = {
   '/profile':     'My Profile',
 }
 
-export default function GlobalNavbar() {
+export default function GlobalNavbar({ onAddressClick }) {
   const { user, logout } = useAuth()
   const { cartCount } = useCart()
+  const { selectedAddress, addresses } = useAddress()
   const navigate = useNavigate()
   const location = useLocation()
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchVal, setSearchVal] = useState('')
+  const [addressesExpanded, setAddressesExpanded] = useState(false)
 
   const isHome = location.pathname === '/home'
   const title = PAGE_TITLES[location.pathname] || ''
@@ -49,6 +52,27 @@ export default function GlobalNavbar() {
             <span className="font-hand text-orange-500">Bite</span>
           </span>
         </button>
+
+        {/* Delivery Address (only on home/cart/kitchen pages) */}
+        {isHome && (
+          <button
+            onClick={onAddressClick}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all max-w-[200px] sm:max-w-[280px]"
+          >
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-[10px] font-body text-gray-400 dark:text-gray-500 uppercase tracking-wide">Delivering to</p>
+              <p className="text-xs font-body font-bold text-gray-700 dark:text-gray-200 truncate">
+                {selectedAddress?.label ? (
+                  <>{selectedAddress.label} {selectedAddress.receiverName ? `- ${selectedAddress.receiverName}` : ''}</>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400">Select Address</span>
+                )}
+              </p>
+            </div>
+            <span className="text-gray-400 text-xs flex-shrink-0">▼</span>
+          </button>
+        )}
 
         {/* Page title on mobile */}
         {title && (
@@ -107,12 +131,62 @@ export default function GlobalNavbar() {
             {profileOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-[#1a1108] rounded-2xl shadow-2xl border border-amber-100 dark:border-amber-900/60 overflow-hidden z-50 animate-slide-down">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-[#1a1108] rounded-2xl shadow-2xl border border-amber-100 dark:border-amber-900/60 overflow-hidden z-50 animate-slide-down">
                   {/* User info */}
                   <div className="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-b border-amber-100 dark:border-amber-900/60">
                     <p className="font-display font-bold text-sm text-gray-900 dark:text-white truncate">{user?.name}</p>
                     <p className="text-xs text-gray-400 truncate mt-0.5">{user?.email}</p>
                   </div>
+                  
+                  {/* Saved Addresses Section */}
+                  <div className="border-b border-amber-100 dark:border-amber-900/60">
+                    <button
+                      onClick={() => setAddressesExpanded(!addressesExpanded)}
+                      className="w-full text-left px-4 py-2.5 font-body text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span>📍</span> My Addresses
+                      </div>
+                      <span className={`text-gray-400 transition-transform ${addressesExpanded ? 'rotate-180' : ''}`}>▼</span>
+                    </button>
+                    
+                    {addressesExpanded && (
+                      <div className="px-2 pb-2 space-y-1">
+                        {addresses.length > 0 ? addresses.map((addr) => (
+                          <button
+                            key={addr.id}
+                            onClick={() => { 
+                              onAddressClick && onAddressClick(addr)
+                              setProfileOpen(false)
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl font-body text-xs transition-colors flex items-start gap-2 ${
+                              addr.isDefault 
+                                ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' 
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                            }`}
+                          >
+                            <span className="text-base flex-shrink-0 mt-0.5">
+                              {addr.label === 'Home' ? '🏠' : addr.label === 'Office' ? '🏢' : '📍'}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold truncate">{addr.label}</p>
+                              <p className="text-[10px] text-gray-400 truncate">{addr.receiverName || user?.name}</p>
+                            </div>
+                            {addr.isDefault && <span className="text-[8px] bg-amber-200 dark:bg-amber-700 px-1.5 py-0.5 rounded text-amber-700 dark:text-amber-200">Default</span>}
+                          </button>
+                        )) : (
+                          <p className="text-xs text-gray-400 px-3 py-2">No saved addresses</p>
+                        )}
+                        <button
+                          onClick={() => { onAddressClick && onAddressClick(); setProfileOpen(false) }}
+                          className="w-full text-left px-3 py-2 rounded-xl font-body text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                        >
+                          ➕ Add New Address
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {[
                     ['🏠', 'Browse Kitchens', '/home'],
                     ['📋', 'My Orders',        '/orders'],
@@ -122,7 +196,7 @@ export default function GlobalNavbar() {
                     <button key={label}
                       onClick={() => { navigate(path); setProfileOpen(false) }}
                       className="w-full text-left px-4 py-2.5 font-body text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors flex items-center gap-3">
-                      <span>{icon}</span>{label}
+                        <span>{icon}</span>{label}
                     </button>
                   ))}
                   <div className="border-t border-amber-100 dark:border-amber-900/60">
