@@ -176,7 +176,7 @@ export default function AddressModal({ isOpen, onClose, onSelect, currentAddress
               </button>
 
               {/* Saved Addresses */}
-              {addresses.length > 0 && (
+              {(addresses || []).length > 0 && (
                 <div className="space-y-3">
                   <p className="font-body text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Saved Addresses</p>
                   {addresses.map((addr) => (

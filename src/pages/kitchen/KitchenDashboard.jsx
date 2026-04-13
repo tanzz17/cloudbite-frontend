@@ -111,8 +111,8 @@ export default function KitchenDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon="📋" label="Total Orders" value={orders.length} />
-        <StatCard icon="🕐" label="Pending" value={statusGroups.PENDING.length} iconBg="bg-yellow-100 dark:bg-yellow-900/30" iconColor="text-yellow-600" />
-        <StatCard icon="🛵" label="Out for Delivery" value={statusGroups.OUT_FOR_DELIVERY.length} iconBg="bg-blue-100 dark:bg-blue-900/30" iconColor="text-blue-600" />
+        <StatCard icon="🕐" label="Pending" value={statusGroups.PENDING?.length || 0} iconBg="bg-yellow-100 dark:bg-yellow-900/30" iconColor="text-yellow-600" />
+        <StatCard icon="🛵" label="With Rider" value={statusGroups.WITH_RIDER?.length || 0} iconBg="bg-blue-100 dark:bg-blue-900/30" iconColor="text-blue-600" />
         <StatCard icon="💰" label="Total Revenue" value={formatCurrency(revenue)} iconBg="bg-green-100 dark:bg-green-900/30" iconColor="text-green-600" />
       </div>
 
@@ -125,7 +125,7 @@ export default function KitchenDashboard() {
             { key: 'CONFIRMED', label: '✅ Confirmed', color: 'border-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/10' },
             { key: 'PREPARING', label: '👨‍🍳 Preparing', color: 'border-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/10' },
             { key: 'WAITING_FOR_PARTNER', label: '🔍 Finding Rider', color: 'border-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/10' },
-            { key: 'OUT_FOR_DELIVERY', label: '🛵 Out for Delivery', color: 'border-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/10' },
+            { key: 'WITH_RIDER', label: '🛵 With Rider', color: 'border-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/10' },
             { key: 'DELIVERED', label: '🎉 Delivered Today', color: 'border-green-400', bg: 'bg-green-50 dark:bg-green-900/10' },
           ].map(({ key, label, color, bg }) => (
             <div key={key} className={`card border-t-4 ${color}`}>
