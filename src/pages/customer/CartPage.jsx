@@ -394,7 +394,7 @@ export default function CartPage() {
         isOpen={showAddressModal}
         onClose={() => setShowAddressModal(false)}
         onSelect={handleAddressSelect}
-        currentAddress={deliveryAddress}
+        currentAddress={selectedAddress?.fullAddress}
       />
     </div>
   )
