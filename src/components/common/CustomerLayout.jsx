@@ -1,10 +1,18 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, Navigate } from 'react-router-dom'
 import GlobalNavbar from './GlobalNavbar'
 import AddressModal from '../customer/AddressModal'
 import { useAddress } from '../../context/AddressContext'
 
 export default function CustomerLayout() {
+  const user = localStorage.getItem('cloudbite_user') 
+    ? JSON.parse(localStorage.getItem('cloudbite_user')) 
+    : null
+
+  if (user?.role !== 'CUSTOMER') {
+    return <Navigate to="/" replace />
+  }
+
   const [showAddressModal, setShowAddressModal] = useState(false)
   const { selectAddress, refreshAddresses } = useAddress()
 
