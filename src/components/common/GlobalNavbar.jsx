@@ -152,7 +152,7 @@ export default function GlobalNavbar({ onAddressClick }) {
                     
                     {addressesExpanded && (
                       <div className="px-2 pb-2 space-y-1">
-                        {addresses.length > 0 ? addresses.map((addr) => (
+                        {(addresses || []).length > 0 ? addresses.map((addr) => (
                           <button
                             key={addr.id}
                             onClick={() => { 
