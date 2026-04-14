@@ -69,8 +69,6 @@ export const kitchenAPI = {
   confirmOrder: (id) => api.patch(`/kitchen/orders/${id}/confirm`),
   markPreparing: (id) => api.patch(`/kitchen/orders/${id}/preparing`),
   markReady: (id) => api.patch(`/kitchen/orders/${id}/ready`),
-  markHandover: (id) => api.patch(`/kitchen/orders/${id}/handover`),
-  markOutForDelivery: (id) => api.patch(`/kitchen/orders/${id}/out-for-delivery`),
   cancelOrder: (id, reason) => api.patch(`/kitchen/orders/${id}/cancel`, { reason }),
   getRevenue: () => api.get('/kitchen/revenue'),
 }
