@@ -19,7 +19,7 @@ const STATUS_TABS = [
   { key: 'PENDING', label: 'New', icon: '🕐' },
   { key: 'CONFIRMED', label: 'Confirmed', icon: '✅' },
   { key: 'PREPARING', label: 'Preparing', icon: '👨‍🍳' },
-  { key: 'READY_FOR_PICKUP', label: 'Ready', icon: '📦' },
+  { key: 'WAITING_FOR_PARTNER', label: 'Finding Rider', icon: '🔍' },
   { key: 'WITH_RIDER', label: 'With Rider', icon: '🛵' },
   { key: 'DELIVERED', label: 'Delivered', icon: '🎉' },
   { key: 'CANCELLED', label: 'Cancelled', icon: '❌' },
@@ -56,7 +56,7 @@ export default function KitchenOrders() {
   const filtered = tab === 'ALL' ? orders : orders.filter(o => {
     if (tab === 'PENDING') return o.status === 'PENDING'
     if (tab === 'READY_FOR_PICKUP') return o.status === 'READY_FOR_PICKUP'
-    if (tab === 'WITH_RIDER') return ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)
+    if (tab === 'WITH_RIDER') return ['ACCEPTED','PARTNER_ASSIGNED','WAITING_FOR_PARTNER','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)
     return o.status === tab
   })
 
@@ -102,9 +102,13 @@ export default function KitchenOrders() {
         {STATUS_TABS.map(({ key, label, icon }) => {
           const count = key === 'ALL' ? orders.length
             : key === 'PENDING' ? orders.filter(o => o.status === 'PENDING').length
-            : key === 'READY_FOR_PICKUP' ? orders.filter(o => o.status === 'READY_FOR_PICKUP').length
-            : key === 'WITH_RIDER' ? orders.filter(o => ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)).length
-            : orders.filter(o => o.status === key).length
+            : key === 'CONFIRMED' ? orders.filter(o => o.status === 'CONFIRMED').length
+            : key === 'PREPARING' ? orders.filter(o => o.status === 'PREPARING').length
+            : key === 'WAITING_FOR_PARTNER' ? orders.filter(o => o.status === 'WAITING_FOR_PARTNER').length
+            : key === 'WITH_RIDER' ? orders.filter(o => ['ACCEPTED','PARTNER_ASSIGNED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)).length
+            : key === 'DELIVERED' ? orders.filter(o => o.status === 'DELIVERED').length
+            : key === 'CANCELLED' ? orders.filter(o => o.status === 'CANCELLED').length
+            : 0
           return (
             <button key={key} onClick={() => setTab(key)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-body font-bold whitespace-nowrap transition-all ${

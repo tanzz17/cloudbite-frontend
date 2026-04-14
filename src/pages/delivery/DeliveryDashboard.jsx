@@ -50,7 +50,7 @@ export default function DeliveryDashboard() {
   useEffect(() => { fetchData() }, [fetchData])
 
   const activeOrder = myOrders.find(o => 
-    ['ACCEPTED', 'HEADING_TO_RESTAURANT', 'ARRIVED_AT_RESTAURANT', 'PICKED_UP', 'HEADING_TO_CUSTOMER'].includes(o.status)
+    ['ACCEPTED', 'PARTNER_ASSIGNED', 'HEADING_TO_RESTAURANT', 'ARRIVED_AT_RESTAURANT', 'PICKED_UP', 'HEADING_TO_CUSTOMER'].includes(o.status)
   )
 
   useGPSSender(activeOrder?.id, user?.id, gpsActive)
