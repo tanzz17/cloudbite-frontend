@@ -5,9 +5,18 @@ import { formatCurrency, formatDate, timeAgo } from '../../utils/helpers'
 import { useWebSocket } from '../../hooks/useWebSocket'
 import toast from 'react-hot-toast'
 
+// Get kitchen ID from profile for WebSocket subscription
+const useKitchenId = () => {
+  const [kitchenId, setKitchenId] = useState(null)
+  useEffect(() => {
+    kitchenAPI.getProfile().then(r => setKitchenId(r.data.id)).catch(() => {})
+  }, [])
+  return kitchenId
+}
+
 const STATUS_TABS = [
   { key: 'ALL', label: 'All Orders', icon: '📋' },
-  { key: 'PLACED', label: 'New', icon: '🕐' },
+  { key: 'PENDING', label: 'New', icon: '🕐' },
   { key: 'CONFIRMED', label: 'Confirmed', icon: '✅' },
   { key: 'PREPARING', label: 'Preparing', icon: '👨‍🍳' },
   { key: 'READY_FOR_PICKUP', label: 'Ready', icon: '📦' },
@@ -23,6 +32,7 @@ export default function KitchenOrders() {
   const [expanded, setExpanded] = useState(null)
   const [cancelId, setCancelId] = useState(null)
   const [actionLoading, setActionLoading] = useState(null)
+  const [kitchenId, setKitchenId] = useState(null)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -32,9 +42,19 @@ export default function KitchenOrders() {
     finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { fetchOrders() }, [])
+  useEffect(() => {
+    fetchOrders()
+    kitchenAPI.getProfile().then(r => setKitchenId(r.data.id)).catch(() => {})
+  }, [])
+
+  // Real-time order notifications
+  useWebSocket(kitchenId ? [{
+    topic: `/topic/kitchen/${kitchenId}/orders`,
+    callback: () => { fetchOrders(); toast('🔔 New order received!', { icon: '🛒' }) }
+  }] : [])
 
   const filtered = tab === 'ALL' ? orders : orders.filter(o => {
+    if (tab === 'PENDING') return o.status === 'PENDING'
     if (tab === 'READY_FOR_PICKUP') return o.status === 'READY_FOR_PICKUP'
     if (tab === 'WITH_RIDER') return ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)
     return o.status === tab
@@ -60,7 +80,7 @@ export default function KitchenOrders() {
     }
     const actions = []
     switch (order.status) {
-      case 'PLACED':   actions.push(btn('✅ Confirm', () => action(kitchenAPI.confirmOrder, order.id, 'Order confirmed!'))); break
+      case 'PENDING':   actions.push(btn('✅ Confirm', () => action(kitchenAPI.confirmOrder, order.id, 'Order confirmed!'))); break
       case 'CONFIRMED': actions.push(btn('👨‍🍳 Start Preparing', () => action(kitchenAPI.markPreparing, order.id, 'Order is being prepared!'), 'blue')); break
       case 'PREPARING': actions.push(btn('📦 Mark Ready', () => action(kitchenAPI.markReady, order.id, 'Order ready! Finding rider...'), 'green')); break
     }
@@ -81,6 +101,7 @@ export default function KitchenOrders() {
       <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         {STATUS_TABS.map(({ key, label, icon }) => {
           const count = key === 'ALL' ? orders.length
+            : key === 'PENDING' ? orders.filter(o => o.status === 'PENDING').length
             : key === 'READY_FOR_PICKUP' ? orders.filter(o => o.status === 'READY_FOR_PICKUP').length
             : key === 'WITH_RIDER' ? orders.filter(o => ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)).length
             : orders.filter(o => o.status === key).length

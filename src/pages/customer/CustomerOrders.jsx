@@ -7,7 +7,8 @@ import toast from 'react-hot-toast'
 
 // ── Order status configuration ───────────────────────────────────────────────
 const STATUS_CONFIG = {
-  PLACED:              { step:0, label:'Order Placed',       icon:'🛒', color:'text-yellow-600', bg:'bg-yellow-50 dark:bg-yellow-900/20',  desc:'Your order has been received.' },
+  PENDING:             { step:0, label:'Order Placed',       icon:'🛒', color:'text-yellow-600', bg:'bg-yellow-50 dark:bg-yellow-900/20',  desc:'Your order has been received.' },
+  PAYMENT_FAILED:      { step:-2, label:'Payment Failed',   icon:'💳', color:'text-red-600',    bg:'bg-red-50 dark:bg-red-900/20',        desc:'Payment was not completed.' },
   CONFIRMED:           { step:1, label:'Confirmed',          icon:'✅', color:'text-blue-600',   bg:'bg-blue-50 dark:bg-blue-900/20',      desc:'Kitchen confirmed your order.' },
   PREPARING:           { step:2, label:'Preparing',          icon:'👨‍🍳', color:'text-purple-600', bg:'bg-purple-50 dark:bg-purple-900/20',  desc:'Your food is being prepared.' },
   READY_FOR_PICKUP:    { step:3, label:'Ready for Pickup',  icon:'📦', color:'text-orange-600', bg:'bg-orange-50 dark:bg-orange-900/20',  desc:'Finding a delivery partner.' },
@@ -410,11 +411,12 @@ export function OrderDetail() {
   )
   if (!order) return null
 
-  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.PLACED
+  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING
   const currentStep = cfg.step
   const isActive = ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(order.status)
   const isDelivered = order.status === 'DELIVERED'
   const isCancelled = order.status === 'CANCELLED'
+  const isPaymentFailed = order.status === 'PAYMENT_FAILED'
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-10">

@@ -35,7 +35,7 @@ function MapFollower({ position }) {
 }
 
 const STATUS_STEPS = {
-  PLACED: { step: 0, label: 'Order Placed', icon: '🛒', color: '#EF4444' },
+  PENDING: { step: 0, label: 'Order Placed', icon: '🛒', color: '#EF4444' },
   CONFIRMED: { step: 1, label: 'Kitchen Confirmed', icon: '✅', color: '#F59E0B' },
   PREPARING: { step: 2, label: 'Preparing', icon: '👨‍🍳', color: '#F59E0B' },
   READY_FOR_PICKUP: { step: 3, label: 'Finding Rider', icon: '🔍', color: '#8B5CF6' },
@@ -50,7 +50,7 @@ const STATUS_STEPS = {
 export default function CustomerOrderTracking({ order }) {
   const [riderPos, setRiderPos] = useState(null);
   const [bearing, setBearing] = useState(0);
-  const [status, setStatus] = useState(order?.status || 'PLACED');
+  const [status, setStatus] = useState(order?.status || 'PENDING');
   const [route, setRoute] = useState(null);
   const [eta, setEta] = useState(null);
   const [currentStep, setCurrentStep] = useState(null);
@@ -88,7 +88,7 @@ export default function CustomerOrderTracking({ order }) {
     });
   }, [riderPos, status]);
 
-  const statusInfo = STATUS_STEPS[status] || STATUS_STEPS['PLACED'];
+  const statusInfo = STATUS_STEPS[status] || STATUS_STEPS['PENDING'];
   const mapCenter = riderPos || (restaurant ? [restaurant.lat, restaurant.lng] : [18.5204, 73.8567]);
 
   return (

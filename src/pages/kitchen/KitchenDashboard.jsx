@@ -43,7 +43,7 @@ export default function KitchenDashboard() {
   }] : [])
 
   const statusGroups = {
-    PLACED: orders.filter(o => o.status === 'PLACED'),
+    PENDING: orders.filter(o => o.status === 'PENDING'),
     CONFIRMED: orders.filter(o => o.status === 'CONFIRMED'),
     PREPARING: orders.filter(o => o.status === 'PREPARING'),
     READY_FOR_PICKUP: orders.filter(o => o.status === 'READY_FOR_PICKUP'),
