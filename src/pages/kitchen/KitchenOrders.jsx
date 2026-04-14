@@ -7,10 +7,10 @@ import toast from 'react-hot-toast'
 
 const STATUS_TABS = [
   { key: 'ALL', label: 'All Orders', icon: '📋' },
-  { key: 'PENDING', label: 'Pending', icon: '🕐' },
+  { key: 'PLACED', label: 'New', icon: '🕐' },
   { key: 'CONFIRMED', label: 'Confirmed', icon: '✅' },
   { key: 'PREPARING', label: 'Preparing', icon: '👨‍🍳' },
-  { key: 'WAITING_FOR_PARTNER', label: 'Waiting Rider', icon: '🔍' },
+  { key: 'READY_FOR_PICKUP', label: 'Ready', icon: '📦' },
   { key: 'WITH_RIDER', label: 'With Rider', icon: '🛵' },
   { key: 'DELIVERED', label: 'Delivered', icon: '🎉' },
   { key: 'CANCELLED', label: 'Cancelled', icon: '❌' },
@@ -35,8 +35,8 @@ export default function KitchenOrders() {
   useEffect(() => { fetchOrders() }, [])
 
   const filtered = tab === 'ALL' ? orders : orders.filter(o => {
-    if (tab === 'WAITING_FOR_PARTNER') return ['WAITING_FOR_PARTNER','READY_FOR_PICKUP'].includes(o.status)
-    if (tab === 'WITH_RIDER') return ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY','PICKED_UP'].includes(o.status)
+    if (tab === 'READY_FOR_PICKUP') return o.status === 'READY_FOR_PICKUP'
+    if (tab === 'WITH_RIDER') return ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)
     return o.status === tab
   })
 
@@ -60,12 +60,11 @@ export default function KitchenOrders() {
     }
     const actions = []
     switch (order.status) {
-      case 'PENDING':   actions.push(btn('✅ Confirm', () => action(kitchenAPI.confirmOrder, order.id, 'Order confirmed!'))); break
+      case 'PLACED':   actions.push(btn('✅ Confirm', () => action(kitchenAPI.confirmOrder, order.id, 'Order confirmed!'))); break
       case 'CONFIRMED': actions.push(btn('👨‍🍳 Start Preparing', () => action(kitchenAPI.markPreparing, order.id, 'Order is being prepared!'), 'blue')); break
       case 'PREPARING': actions.push(btn('📦 Mark Ready', () => action(kitchenAPI.markReady, order.id, 'Order ready! Finding rider...'), 'green')); break
-      case 'PARTNER_ASSIGNED': actions.push(btn('🤝 Mark Handover', () => action(kitchenAPI.markHandover, order.id, 'Order handed over to rider!'))); break
     }
-    if (!['DELIVERED','CANCELLED','OUT_FOR_DELIVERY'].includes(order.status)) {
+    if (!['DELIVERED','CANCELLED','PICKED_UP','HEADING_TO_CUSTOMER'].includes(order.status)) {
       actions.push(btn('❌ Cancel', () => setCancelId(order.id), 'red'))
     }
     return actions.map(a => ({ ...a, colorClass: colorMap[a.color] }))
@@ -82,8 +81,8 @@ export default function KitchenOrders() {
       <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         {STATUS_TABS.map(({ key, label, icon }) => {
           const count = key === 'ALL' ? orders.length
-            : key === 'WAITING_FOR_PARTNER' ? orders.filter(o => ['WAITING_FOR_PARTNER','READY_FOR_PICKUP'].includes(o.status)).length
-            : key === 'WITH_RIDER' ? orders.filter(o => ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY','PICKED_UP'].includes(o.status)).length
+            : key === 'READY_FOR_PICKUP' ? orders.filter(o => o.status === 'READY_FOR_PICKUP').length
+            : key === 'WITH_RIDER' ? orders.filter(o => ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)).length
             : orders.filter(o => o.status === key).length
           return (
             <button key={key} onClick={() => setTab(key)}

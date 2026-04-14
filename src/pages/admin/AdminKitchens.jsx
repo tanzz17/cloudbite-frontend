@@ -102,7 +102,7 @@ export function AdminOrders() {
       .finally(() => setLoading(false))
   }, [])
 
-  const statuses = ['ALL', 'PENDING', 'CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED']
+  const statuses = ['ALL', 'PLACED', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'PICKED_UP', 'DELIVERED', 'CANCELLED']
   const filtered = filter === 'ALL' ? orders : orders.filter(o => o.status === filter)
 
   return (

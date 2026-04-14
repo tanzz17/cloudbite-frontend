@@ -43,11 +43,11 @@ export default function KitchenDashboard() {
   }] : [])
 
   const statusGroups = {
-    PENDING:   orders.filter(o => o.status === 'PENDING'),
+    PLACED: orders.filter(o => o.status === 'PLACED'),
     CONFIRMED: orders.filter(o => o.status === 'CONFIRMED'),
     PREPARING: orders.filter(o => o.status === 'PREPARING'),
-    WAITING_FOR_PARTNER: orders.filter(o => o.status === 'WAITING_FOR_PARTNER' || o.status === 'READY_FOR_PICKUP'),
-    WITH_RIDER: orders.filter(o => ['PARTNER_ASSIGNED','HANDOVER','OUT_FOR_DELIVERY','PICKED_UP'].includes(o.status)),
+    READY_FOR_PICKUP: orders.filter(o => o.status === 'READY_FOR_PICKUP'),
+    WITH_RIDER: orders.filter(o => ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(o.status)),
     DELIVERED: orders.filter(o => o.status === 'DELIVERED'),
   }
 
@@ -111,7 +111,7 @@ export default function KitchenDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon="📋" label="Total Orders" value={orders.length} />
-        <StatCard icon="🕐" label="Pending" value={statusGroups.PENDING?.length || 0} iconBg="bg-yellow-100 dark:bg-yellow-900/30" iconColor="text-yellow-600" />
+        <StatCard icon="🕐" label="New" value={statusGroups.PLACED?.length || 0} iconBg="bg-yellow-100 dark:bg-yellow-900/30" iconColor="text-yellow-600" />
         <StatCard icon="🛵" label="With Rider" value={statusGroups.WITH_RIDER?.length || 0} iconBg="bg-blue-100 dark:bg-blue-900/30" iconColor="text-blue-600" />
         <StatCard icon="💰" label="Total Revenue" value={formatCurrency(revenue)} iconBg="bg-green-100 dark:bg-green-900/30" iconColor="text-green-600" />
       </div>
@@ -121,10 +121,10 @@ export default function KitchenDashboard() {
         <h2 className="section-title mb-4">Live Orders Board 📊</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[
-            { key: 'PENDING', label: '🕐 Pending', color: 'border-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/10' },
+            { key: 'PLACED', label: '🕐 New Orders', color: 'border-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/10' },
             { key: 'CONFIRMED', label: '✅ Confirmed', color: 'border-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/10' },
             { key: 'PREPARING', label: '👨‍🍳 Preparing', color: 'border-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/10' },
-            { key: 'WAITING_FOR_PARTNER', label: '🔍 Finding Rider', color: 'border-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/10' },
+            { key: 'READY_FOR_PICKUP', label: '🔍 Ready for Rider', color: 'border-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/10' },
             { key: 'WITH_RIDER', label: '🛵 With Rider', color: 'border-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/10' },
             { key: 'DELIVERED', label: '🎉 Delivered Today', color: 'border-green-400', bg: 'bg-green-50 dark:bg-green-900/10' },
           ].map(({ key, label, color, bg }) => (

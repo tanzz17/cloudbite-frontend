@@ -107,9 +107,18 @@ export const deliveryAPI = {
   getMyOrders: () => api.get('/delivery/my-orders'),
   acceptOrder: (id) => api.patch(`/delivery/orders/${id}/accept`),
   startTrip: (id) => api.patch(`/delivery/orders/${id}/start-trip`),
+  arrived: (id) => api.patch(`/delivery/orders/${id}/arrived`),
   pickedUp: (id) => api.patch(`/delivery/orders/${id}/picked-up`),
+  headingToCustomer: (id) => api.patch(`/delivery/orders/${id}/heading-to-customer`),
   markDelivered: (id) => api.patch(`/delivery/orders/${id}/delivered`),
   updateLocation: (data) => api.post('/delivery/location', data),
+}
+
+// ==================== TRACKING ====================
+export const trackingAPI = {
+  updateLocation: (data) => api.post('/tracking/location', data),
+  updateStatus: (orderId, status) => api.patch(`/tracking/order/${orderId}/status?status=${status}`),
+  getLastLocation: (orderId) => api.get(`/tracking/order/${orderId}/location`),
 }
 
 // ==================== PAYMENT ====================

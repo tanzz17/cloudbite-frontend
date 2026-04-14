@@ -7,21 +7,20 @@ import toast from 'react-hot-toast'
 
 // ── Order status configuration ───────────────────────────────────────────────
 const STATUS_CONFIG = {
-  PENDING:              { step:0, label:'Order Placed',       icon:'🛒', color:'text-yellow-600', bg:'bg-yellow-50 dark:bg-yellow-900/20',  desc:'Your order has been received by the kitchen.' },
-  PAYMENT_FAILED:       { step:-1, label:'Payment Failed',    icon:'💳', color:'text-red-600',    bg:'bg-red-50 dark:bg-red-900/20',        desc:'Payment was not completed. Your order has not been placed.' },
-  CONFIRMED:            { step:1, label:'Confirmed',          icon:'✅', color:'text-blue-600',   bg:'bg-blue-50 dark:bg-blue-900/20',      desc:'Kitchen has confirmed your order.' },
-  PREPARING:            { step:2, label:'Preparing',          icon:'👨‍🍳', color:'text-purple-600', bg:'bg-purple-50 dark:bg-purple-900/20',  desc:'Your food is being freshly prepared.' },
-  READY_FOR_PICKUP:     { step:3, label:'Ready for Pickup',   icon:'📦', color:'text-orange-600', bg:'bg-orange-50 dark:bg-orange-900/20',  desc:'Food is ready. Finding a delivery partner.' },
-  WAITING_FOR_PARTNER:  { step:3, label:'Finding Rider',      icon:'🔍', color:'text-orange-600', bg:'bg-orange-50 dark:bg-orange-900/20',  desc:'Looking for an available delivery partner.' },
-  PARTNER_ASSIGNED:     { step:4, label:'Rider Assigned',     icon:'🛵', color:'text-indigo-600', bg:'bg-indigo-50 dark:bg-indigo-900/20',  desc:'Your rider has accepted the order.' },
-  HANDOVER:             { step:4, label:'Handover',          icon:'🤝', color:'text-indigo-600', bg:'bg-indigo-50 dark:bg-indigo-900/20',  desc:'Food handed to rider at kitchen.' },
-  OUT_FOR_DELIVERY:     { step:5, label:'Trip Started',      icon:'🛵', color:'text-blue-600',   bg:'bg-blue-50 dark:bg-blue-900/20',      desc:'Your rider has started the trip!' },
-  PICKED_UP:            { step:5, label:'Picked Up',          icon:'🍔', color:'text-green-600',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Your food has been picked up!' },
-  DELIVERED:            { step:6, label:'Delivered',          icon:'🎉', color:'text-green-700',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Order delivered! Enjoy your meal.' },
-  CANCELLED:            { step:-1, label:'Cancelled',         icon:'❌', color:'text-red-600',    bg:'bg-red-50 dark:bg-red-900/20',        desc:'Order was cancelled.' },
+  PLACED:              { step:0, label:'Order Placed',       icon:'🛒', color:'text-yellow-600', bg:'bg-yellow-50 dark:bg-yellow-900/20',  desc:'Your order has been received.' },
+  CONFIRMED:           { step:1, label:'Confirmed',          icon:'✅', color:'text-blue-600',   bg:'bg-blue-50 dark:bg-blue-900/20',      desc:'Kitchen confirmed your order.' },
+  PREPARING:           { step:2, label:'Preparing',          icon:'👨‍🍳', color:'text-purple-600', bg:'bg-purple-50 dark:bg-purple-900/20',  desc:'Your food is being prepared.' },
+  READY_FOR_PICKUP:    { step:3, label:'Ready for Pickup',  icon:'📦', color:'text-orange-600', bg:'bg-orange-50 dark:bg-orange-900/20',  desc:'Finding a delivery partner.' },
+  ACCEPTED:            { step:4, label:'Rider Accepted',     icon:'🛵', color:'text-indigo-600', bg:'bg-indigo-50 dark:bg-indigo-900/20',  desc:'A rider accepted your order!' },
+  HEADING_TO_RESTAURANT: { step:5, label:'Rider En Route', icon:'🛵', color:'text-blue-600',   bg:'bg-blue-50 dark:bg-blue-900/20',      desc:'Rider is heading to restaurant.' },
+  ARRIVED_AT_RESTAURANT: { step:6, label:'Rider Arrived',   icon:'📍', color:'text-purple-600', bg:'bg-purple-50 dark:bg-purple-900/20',  desc:'Rider arrived at restaurant!' },
+  PICKED_UP:           { step:7, label:'Picked Up',          icon:'🍱', color:'text-green-600',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Order picked up! On the way.' },
+  HEADING_TO_CUSTOMER: { step:8, label:'On the way!',       icon:'🚀', color:'text-green-600',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Rider is heading to you!' },
+  DELIVERED:           { step:9, label:'Delivered',          icon:'🎉', color:'text-green-700',  bg:'bg-green-50 dark:bg-green-900/20',    desc:'Order delivered! Enjoy your meal.' },
+  CANCELLED:           { step:-1, label:'Cancelled',         icon:'❌', color:'text-red-600',    bg:'bg-red-50 dark:bg-red-900/20',        desc:'Order was cancelled.' },
 }
 
-const STEPS = ['Order Placed','Confirmed','Preparing','Finding Rider','Rider Assigned','Out for Delivery','Delivered']
+const STEPS = ['Order Placed','Confirmed','Preparing','Ready','Rider Accepted','En Route','Arrived','Picked Up','On the way','Delivered']
 
 // ── Live Map with Leaflet ─────────────────────────────────────────────────────
 const LiveMap = ({ order, partnerLocation, signalLost }) => {
@@ -411,12 +410,11 @@ export function OrderDetail() {
   )
   if (!order) return null
 
-  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING
+  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.PLACED
   const currentStep = cfg.step
-  const isActive = ['PARTNER_ASSIGNED','OUT_FOR_DELIVERY','PICKED_UP'].includes(order.status)
+  const isActive = ['ACCEPTED','HEADING_TO_RESTAURANT','ARRIVED_AT_RESTAURANT','PICKED_UP','HEADING_TO_CUSTOMER'].includes(order.status)
   const isDelivered = order.status === 'DELIVERED'
   const isCancelled = order.status === 'CANCELLED'
-  const isPaymentFailed = order.status === 'PAYMENT_FAILED'
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-10">

@@ -16,17 +16,17 @@ export const timeAgo = (dateStr) => {
 }
 
 export const ORDER_STATUS_CONFIG = {
-  PENDING:           { label: 'Pending',           color: 'badge-pending',   icon: '🕐', step: 0 },
-  CONFIRMED:         { label: 'Confirmed',          color: 'badge-confirmed', icon: '✅', step: 1 },
-  PREPARING:         { label: 'Preparing',          color: 'badge-preparing', icon: '👨‍🍳', step: 2 },
-  READY_FOR_PICKUP:  { label: 'Ready',              color: 'badge-ready',     icon: '📦', step: 3 },
-  WAITING_FOR_PARTNER: { label: 'Finding Rider',   color: 'badge-pickup',    icon: '🔍', step: 3 },
-  PARTNER_ASSIGNED:  { label: 'Rider Assigned',    color: 'badge-pickup',    icon: '🛵', step: 4 },
-  HANDOVER:          { label: 'Handover',           color: 'badge-delivery',  icon: '🤝', step: 4 },
-  OUT_FOR_DELIVERY:  { label: 'Trip Started',      color: 'badge-delivery',  icon: '🚗', step: 5 },
-  PICKED_UP:         { label: 'Picked Up',         color: 'badge-delivery',  icon: '🍔', step: 5 },
-  DELIVERED:         { label: 'Delivered',          color: 'badge-delivered', icon: '🎉', step: 6 },
-  CANCELLED:         { label: 'Cancelled',          color: 'badge-cancelled', icon: '❌', step: -1 },
+  PLACED:             { label: 'Placed',              color: 'badge-pending',   icon: '🛒', step: 0 },
+  CONFIRMED:          { label: 'Confirmed',           color: 'badge-confirmed', icon: '✅', step: 1 },
+  PREPARING:          { label: 'Preparing',           color: 'badge-preparing', icon: '👨‍🍳', step: 2 },
+  READY_FOR_PICKUP:   { label: 'Ready',               color: 'badge-ready',     icon: '📦', step: 3 },
+  ACCEPTED:           { label: 'Rider Accepted',      color: 'badge-pickup',    icon: '🛵', step: 4 },
+  HEADING_TO_RESTAURANT: { label: 'En Route',        color: 'badge-pickup',    icon: '🛵', step: 5 },
+  ARRIVED_AT_RESTAURANT: { label: 'Rider Arrived',    color: 'badge-delivery',  icon: '📍', step: 6 },
+  PICKED_UP:          { label: 'Picked Up',          color: 'badge-delivery',  icon: '🍱', step: 7 },
+  HEADING_TO_CUSTOMER: { label: 'On the way',       color: 'badge-delivery',  icon: '🚀', step: 8 },
+  DELIVERED:          { label: 'Delivered',          color: 'badge-delivered', icon: '🎉', step: 9 },
+  CANCELLED:          { label: 'Cancelled',          color: 'badge-cancelled', icon: '❌', step: -1 },
 }
 
 export const getStatusBadge = (status) => {
@@ -34,20 +34,22 @@ export const getStatusBadge = (status) => {
 }
 
 export const TRACKING_STEPS = [
-  { key: 'PENDING',          label: 'Order Placed',       icon: '🛒' },
-  { key: 'CONFIRMED',        label: 'Confirmed',          icon: '✅' },
-  { key: 'PREPARING',        label: 'Preparing',          icon: '👨‍🍳' },
-  { key: 'WAITING_FOR_PARTNER', label: 'Finding Rider',  icon: '🔍' },
-  { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery',  icon: '🛵' },
-  { key: 'DELIVERED',        label: 'Delivered',          icon: '🎉' },
+  { key: 'PLACED',          label: 'Order Placed',       icon: '🛒' },
+  { key: 'CONFIRMED',       label: 'Confirmed',          icon: '✅' },
+  { key: 'PREPARING',       label: 'Preparing',          icon: '👨‍🍳' },
+  { key: 'READY_FOR_PICKUP', label: 'Ready',             icon: '📦' },
+  { key: 'ACCEPTED',        label: 'Rider Accepted',     icon: '🛵' },
+  { key: 'HEADING_TO_RESTAURANT', label: 'En Route',    icon: '🛵' },
+  { key: 'PICKED_UP',       label: 'Picked Up',         icon: '🍱' },
+  { key: 'HEADING_TO_CUSTOMER', label: 'On the way',     icon: '🚀' },
+  { key: 'DELIVERED',       label: 'Delivered',          icon: '🎉' },
 ]
 
 export const getStepIndex = (status) => {
   const map = {
-    PENDING: 0, CONFIRMED: 1, PREPARING: 2,
-    READY_FOR_PICKUP: 3, WAITING_FOR_PARTNER: 3,
-    PARTNER_ASSIGNED: 4, HANDOVER: 4,
-    OUT_FOR_DELIVERY: 5, PICKED_UP: 5, DELIVERED: 6
+    PLACED: 0, CONFIRMED: 1, PREPARING: 2, READY_FOR_PICKUP: 3,
+    ACCEPTED: 4, HEADING_TO_RESTAURANT: 5, ARRIVED_AT_RESTAURANT: 6,
+    PICKED_UP: 7, HEADING_TO_CUSTOMER: 8, DELIVERED: 9
   }
   return map[status] ?? 0
 }
