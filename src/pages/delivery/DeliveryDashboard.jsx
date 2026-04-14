@@ -75,7 +75,8 @@ export default function DeliveryDashboard() {
     setActionId(orderId)
     try {
       await deliveryAPI.acceptOrder(orderId)
-      toast.success('🎉 Order accepted!')
+      toast.success('🎉 Order accepted! GPS tracking started - customer can now see you on map!')
+      setGpsActive(true)
       fetchData()
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to accept') }
     finally { setActionId(null) }
