@@ -212,15 +212,17 @@ export default function OrderTrackingPage() {
           for (let i = 1; i <= numStops; i++) {
             stopPoints.push({
               index: Math.floor((route.length / (numStops + 1)) * i),
-              duration: 5000 + Math.random() * 5000
+              duration: 3000 + Math.random() * 2000
             });
           }
         }
 
-        const stepInterval = 500;
+        const stepInterval = 400;
         let currentIndex = 0;
         let pauseEndTime = 0;
-
+        const totalSteps = route.length;
+        const baseEta = r.eta;
+        
         const moveStep = () => {
           if (currentIndex >= route.length - 1) {
             setRiderPosition(route[route.length - 1]);
@@ -244,7 +246,7 @@ export default function OrderTrackingPage() {
             pauseStateRef.current.isPaused = true;
             pauseStateRef.current.pauseEndTime = Date.now() + stop.duration;
             setIsPaused(true);
-            console.log(`Rider paused at waypoint ${currentIndex} for ${stop.duration/1000}s`);
+            console.log(`Rider paused for ${stop.duration/1000}s`);
             return;
           }
 
@@ -258,9 +260,10 @@ export default function OrderTrackingPage() {
             setBearing(b);
           }
 
-          const remainingPoints = route.length - currentIndex;
-          const remainingSeconds = (remainingPoints * stepInterval) / 1000;
-          setEta(Math.max(1, Math.ceil(remainingSeconds / 60)));
+          const progress = currentIndex / totalSteps;
+          const newEta = Math.max(1, Math.ceil(baseEta * (1 - progress)));
+          setEta(newEta);
+        };
         };
 
         if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
