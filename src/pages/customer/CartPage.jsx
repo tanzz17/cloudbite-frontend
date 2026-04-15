@@ -67,7 +67,6 @@ export default function CartPage() {
 
   const handleAddressSelect = (address) => {
     selectAddress(address)
-    refreshAddresses()
   }
 
   const items      = cart?.items || []

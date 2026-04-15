@@ -53,7 +53,6 @@ export function AddressProvider({ children }) {
 
   const refreshAddresses = () => {
     loadAddresses()
-    loadDefaultAddress()
   }
 
   return (
