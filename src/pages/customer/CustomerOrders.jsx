@@ -383,10 +383,12 @@ export function OrderDetail() {
   useEffect(() => { fetchOrder() }, [])
 
   // WebSocket: real-time status + GPS
+  console.log('Setting up WebSocket for order:', orderId, 'order:', order?.status)
   useWebSocket(order ? [
     {
       topic: `/topic/order/${orderId}/status`,
       callback: (msg) => {
+        console.log('Status update received:', msg)
         setOrder(prev => prev ? { ...prev, status: msg.status } : prev)
         const c = STATUS_CONFIG[msg.status]
         if (c) toast(c.desc, { icon: c.icon })
@@ -395,11 +397,16 @@ export function OrderDetail() {
     {
       topic: `/topic/order/${orderId}/location`,
       callback: (loc) => {
-        setPartnerLoc({ lat: loc.lat, lng: loc.lng })
-        setSignalLost(false)
-        clearTimeout(signalTimer.current)
-        // If no update in 15s, mark signal weak
-        signalTimer.current = setTimeout(() => setSignalLost(true), 15000)
+        console.log('Location update received:', loc)
+        // Backend sends latitude/lng, some APIs send lat/lng
+        const lat = loc.lat ?? loc.latitude
+        const lng = loc.lng ?? loc.longitude
+        if (lat && lng) {
+          setPartnerLoc({ lat, lng })
+          setSignalLost(false)
+          clearTimeout(signalTimer.current)
+          signalTimer.current = setTimeout(() => setSignalLost(true), 15000)
+        }
       },
     },
   ] : [])
@@ -417,6 +424,9 @@ export function OrderDetail() {
   const isDelivered = order.status === 'DELIVERED'
   const isCancelled = order.status === 'CANCELLED'
   const isPaymentFailed = order.status === 'PAYMENT_FAILED'
+
+  // Debug: log what's happening
+  console.log('Order status:', order.status, 'isActive:', isActive, 'partnerLocation:', partnerLocation)
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-10">
