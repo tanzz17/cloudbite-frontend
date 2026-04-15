@@ -83,6 +83,14 @@ export default function KitchenMenuPage() {
     finally { setAddingId(null) }
   }
 
+  const handleRemove = async (item) => {
+    setAddingId(item.id)
+    try {
+      await addToCart(item.id, -1)
+    } catch { toast.error('Failed to remove') }
+    finally { setAddingId(null) }
+  }
+
   const scrollToCategory = (cat) => {
     setActiveCategory(cat)
     const el = categoryRefs.current[cat]
@@ -104,7 +112,7 @@ export default function KitchenMenuPage() {
           : <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-8xl mb-2 animate-pulse-slow">🍽️</div>
-                <div className="font-display text-white/90 text-2xl font-bold tracking-wide" style={{fontFamily: 'serif'}}>स्वादिष्ट पदार्थ</div>
+                <div className="font-display text-white/90 text-2xl font-bold tracking-wide">Delicious Food</div>
               </div>
             </div>}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
@@ -156,11 +164,11 @@ export default function KitchenMenuPage() {
             <span className="text-gray-400 text-xs">min order</span>
           </div>
           <span className={`ml-auto font-bold px-3 py-1 rounded-full text-sm ${kitchen?.isOpen ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-            {kitchen?.isOpen ? '🟢 खुले' : '🔴 बंद'}
+            {kitchen?.isOpen ? '🟢 Open' : '🔴 Closed'}
           </span>
         </div>
         <div className="mt-3 flex items-center gap-2">
-          <span className="text-sm font-body text-gray-500">शुद्ध वनस्पती</span>
+          <span className="text-sm font-body text-gray-500">Veg Only</span>
           <button onClick={() => setVegOnly(v => !v)}
             className={`relative w-12 h-6 rounded-full transition-all duration-300 ${vegOnly ? 'bg-green-500 shadow-lg shadow-green-400/50' : 'bg-gray-200 dark:bg-gray-700'}`}>
             <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${vegOnly ? 'translate-x-6' : 'translate-x-0.5'}`} />
@@ -245,7 +253,7 @@ export default function KitchenMenuPage() {
                             <span className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`} />
                           </span>
                           {item.isBestSeller && (
-                            <span className="text-[10px] font-bold text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded-full animate-pulse">⭐ बेस्ट सेलर</span>
+                            <span className="text-[10px] font-bold text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded-full animate-pulse">⭐ Bestseller</span>
                           )}
                         </div>
                         <h3 className="font-display font-bold text-gray-900 dark:text-white text-lg mb-1 group-hover:text-amber-600 transition-colors">{item.name}</h3>
@@ -263,7 +271,7 @@ export default function KitchenMenuPage() {
                         )}
                         {cartQty > 0 ? (
                           <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl px-1.5 py-1 shadow-lg">
-                            <button onClick={() => handleAdd(item)} disabled={addingId === item.id}
+                            <button onClick={() => handleRemove(item)} disabled={addingId === item.id}
                               className="w-7 h-7 text-white font-bold text-lg flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors">−</button>
                             <span className="font-body font-bold text-white text-sm w-6 text-center">{cartQty}</span>
                             <button onClick={() => handleAdd(item)} disabled={addingId === item.id || !kitchen?.isOpen}
