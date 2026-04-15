@@ -264,7 +264,6 @@ export default function OrderTrackingPage() {
           const newEta = Math.max(1, Math.ceil(baseEta * (1 - progress)));
           setEta(newEta);
         };
-        };
 
         if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
 
