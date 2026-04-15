@@ -38,8 +38,10 @@ export default function KitchenMenuPage() {
   const [kitchen,     setKitchen]     = useState(null)
   const [menuItems,   setMenuItems]   = useState([])
   const [loading,     setLoading]     = useState(true)
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [vegOnly,     setVegOnly]     = useState(false)
+const [activeCategory, setActiveCategory] = useState('All')
+  const [activeSubCategory, setActiveSubCategory] = useState('All')
+  const [subCategories, setSubCategories] = useState({})
+  const [vegOnly, setVegOnly] = useState(false)
   const [addingId,    setAddingId]    = useState(null)
   const [addedIds,    setAddedIds]    = useState(new Set())
   const [addons,      setAddons]      = useState([])
@@ -49,7 +51,26 @@ export default function KitchenMenuPage() {
 
   useEffect(() => {
     Promise.all([customerAPI.getKitchen(kitchenId), customerAPI.getMenu(kitchenId)])
-      .then(([k, m]) => { setKitchen(k.data); setMenuItems(m.data) })
+      .then(([k, m]) => { 
+        setKitchen(k.data); 
+        setMenuItems(m.data);
+        
+        // Extract subCategories from menu items by category
+        const subCatMap = {};
+        m.data.forEach(item => {
+          if (item.category && item.subCategory) {
+            if (!subCatMap[item.category]) {
+              subCatMap[item.category] = new Set();
+            }
+            subCatMap[item.category].add(item.subCategory);
+          }
+        });
+        // Convert Sets to arrays
+        Object.keys(subCatMap).forEach(cat => {
+          subCatMap[cat] = ['All', ...Array.from(subCatMap[cat])];
+        });
+        setSubCategories(subCatMap);
+      })
       .catch(() => toast.error('Failed to load kitchen'))
       .finally(() => setLoading(false))
   }, [kitchenId])
@@ -66,7 +87,8 @@ export default function KitchenMenuPage() {
   const categories = ['All', ...new Set(menuItems.map(i => i.category).filter(Boolean))]
   const displayed  = menuItems.filter(item => {
     const matchCat = activeCategory === 'All' || item.category === activeCategory
-    return matchCat && (!vegOnly || item.isVeg) && item.isAvailable
+    const matchSubCat = activeSubCategory === 'All' || item.subCategory === activeSubCategory
+    return matchCat && matchSubCat && (!vegOnly || item.isVeg) && item.isAvailable
   })
 
   const handleAdd = async (item) => {
@@ -93,6 +115,7 @@ export default function KitchenMenuPage() {
 
   const scrollToCategory = (cat) => {
     setActiveCategory(cat)
+    setActiveSubCategory('All')
     const el = categoryRefs.current[cat]
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -230,6 +253,22 @@ export default function KitchenMenuPage() {
             </button>
           ))}
         </div>
+        
+        {/* Sub-category filter */}
+        {activeCategory !== 'All' && subCategories[activeCategory] && subCategories[activeCategory].length > 1 && (
+          <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+            {subCategories[activeCategory].map(sub => (
+              <button key={sub} onClick={() => setActiveSubCategory(sub)}
+                className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                  activeSubCategory === sub
+                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                }`}>
+                {sub}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── MENU ITEMS GROUPED BY CATEGORY ──────────────── */}
@@ -260,6 +299,9 @@ export default function KitchenMenuPage() {
                           <span className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${item.isVeg ? 'border-green-500' : 'border-red-500'}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`} />
                           </span>
+                          {item.subCategory && item.subCategory !== 'General' && (
+                            <span className="text-[9px] font-medium text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-1.5 py-0.5 rounded">{item.subCategory}</span>
+                          )}
                           {item.isBestSeller && (
                             <span className="text-[10px] font-bold text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded-full animate-pulse">⭐ Bestseller</span>
                           )}
