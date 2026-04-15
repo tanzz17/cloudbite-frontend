@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { customerAPI } from '../../services/api'
+import { customerAPI, trackingAPI } from '../../services/api'
 import { formatCurrency, formatDate, timeAgo } from '../../utils/helpers'
 import { useWebSocket } from '../../hooks/useWebSocket'
 import toast from 'react-hot-toast'
@@ -384,6 +384,33 @@ export function OrderDetail() {
 
   // WebSocket: real-time status + GPS
   console.log('Setting up WebSocket for order:', orderId, 'order:', order?.status)
+  
+  // Also poll for location as backup
+  useEffect(() => {
+    if (!order?.id || !order.deliveryPartner) return
+    
+    const pollLocation = async () => {
+      try {
+        const { data } = await trackingAPI.getLastLocation(order.id)
+        const lat = data.latitude
+        const lng = data.longitude
+        console.log('📍 Polled location:', data)
+        if (lat && lng && lat !== 0 && lng !== 0) {
+          setPartnerLoc({ lat, lng })
+          setSignalLost(false)
+        }
+      } catch (e) {
+        console.error('Poll error:', e)
+      }
+    }
+    
+    // Poll every 3 seconds as backup
+    const interval = setInterval(pollLocation, 3000)
+    pollLocation() // Initial poll
+    
+    return () => clearInterval(interval)
+  }, [order?.id, order?.deliveryPartner])
+  
   useWebSocket(order ? [
     {
       topic: `/topic/order/${orderId}/status`,
