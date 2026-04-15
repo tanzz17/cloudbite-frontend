@@ -30,6 +30,7 @@ import CustomerHome from './pages/customer/CustomerHome'
 import KitchenMenuPage from './pages/customer/KitchenMenuPage'
 import CartPage from './pages/customer/CartPage'
 import { CustomerOrders, OrderDetail } from './pages/customer/CustomerOrders'
+import OrderTrackingPage from './pages/customer/OrderTrackingPage'
 
 import BrowseByDish from './pages/customer/BrowseByDish'
 import CustomerLayout from './components/common/CustomerLayout'
@@ -99,7 +100,7 @@ export default function App() {
                 <Route path="/browse"                  element={<BrowseByDish />} />
                 <Route path="/cart"                    element={<CartPage />} />
                 <Route path="/orders"                  element={<CustomerOrders />} />
-                <Route path="/orders/:orderId"         element={<OrderDetail />} />
+                <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
                 <Route path="/profile"                 element={<ProfilePage />} />
               </Route>
 
