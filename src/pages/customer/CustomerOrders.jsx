@@ -391,6 +391,27 @@ export function OrderDetail() {
 
   useEffect(() => { fetchOrder() }, [])
 
+  // Poll for order status updates (for kitchen status changes)
+  useEffect(() => {
+    if (!orderId) return
+    
+    let currentStatus = null
+    
+    const pollStatus = async () => {
+      try {
+        const { data } = await customerAPI.getOrder(orderId)
+        if (data.status !== currentStatus) {
+          console.log('Status changed:', data.status)
+          currentStatus = data.status
+          setOrder(data)
+        }
+      } catch (e) { console.error('Poll error:', e) }
+    }
+    
+    const interval = setInterval(pollStatus, 3000)
+    return () => clearInterval(interval)
+  }, [orderId])
+
   // WebSocket: real-time status + GPS
   console.log('Setting up WebSocket for order:', orderId, 'order:', order?.status)
   
