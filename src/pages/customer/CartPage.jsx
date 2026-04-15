@@ -200,7 +200,7 @@ export default function CartPage() {
         try {
           await handleRazorpay(order.id)
           toast.success('🎉 Payment successful! Order placed.')
-          await fetchCart()
+          await clearCart()
           navigate(`/orders/${order.id}`)
         } catch (e) {
           if (e.message === 'cancelled') {
@@ -214,7 +214,7 @@ export default function CartPage() {
         }
       } else {
         toast.success('🎉 Order placed! Pay on delivery.')
-        await fetchCart()
+        await clearCart()
         navigate(`/orders/${order.id}`)
       }
     } catch (e) {

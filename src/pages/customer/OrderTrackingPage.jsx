@@ -220,6 +220,8 @@ export default function OrderTrackingPage() {
             setEta(0);
             setIsPaused(false);
             if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
+            setLiveStatus('DELIVERED');
+            setTimeout(() => navigate('/'), 3000);
             return;
           }
 
