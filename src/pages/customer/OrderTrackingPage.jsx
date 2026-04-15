@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -8,6 +8,8 @@ import SockJS from 'sockjs-client';
 import { customerAPI, trackingAPI } from '../../services/api';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://cloudbite-backend-msab.onrender.com';
+
+const DEMO_MODE = true;
 
 async function fetchRoute(from, to) {
   try {
@@ -103,8 +105,11 @@ export default function OrderTrackingPage() {
   const [nextStep, setNextStep] = useState(null);
   const [loading, setLoading] = useState(true);
   const [wsConnected, setWsConnected] = useState(false);
+  const [demoRoute, setDemoRoute] = useState(null);
+  const [demoRouteIndex, setDemoRouteIndex] = useState(0);
 
   const stompRef = useRef(null);
+  const demoIntervalRef = useRef(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -114,14 +119,7 @@ export default function OrderTrackingPage() {
         const { data: ord } = await customerAPI.getOrder(orderId);
         setOrder(ord);
         setLiveStatus(ord.status);
-
-        try {
-          const { data: loc } = await trackingAPI.getLastLocation(orderId);
-          if (loc?.latitude && loc?.longitude && loc.latitude !== 0) {
-            setRiderPosition([loc.latitude, loc.longitude]);
-            setBearing(loc.bearing ?? 0);
-          }
-        } catch {}
+        console.log('Order loaded:', ord);
       } catch (err) {
         console.error('Failed to fetch order:', err);
       } finally {
@@ -133,28 +131,23 @@ export default function OrderTrackingPage() {
   }, [orderId]);
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId || DEMO_MODE) return;
 
     const client = new Client({
       webSocketFactory: () => new SockJS(`${BASE}/ws`),
       reconnectDelay: 4000,
       onConnect: () => {
         setWsConnected(true);
-        console.log('WS Connected for order:', orderId);
-
         client.subscribe(`/topic/order/${orderId}/location`, (msg) => {
           const data = JSON.parse(msg.body);
-          console.log('Location update:', data);
           if (data.latitude && data.longitude) {
             setRiderPosition([data.latitude, data.longitude]);
             setBearing(data.bearing ?? 0);
           }
           if (data.orderStatus) setLiveStatus(data.orderStatus);
         });
-
         client.subscribe(`/topic/order/${orderId}/status`, (msg) => {
           const data = JSON.parse(msg.body);
-          console.log('Status update:', data);
           if (data.status) setLiveStatus(data.status);
         });
       },
@@ -167,12 +160,79 @@ export default function OrderTrackingPage() {
     return () => { client.deactivate(); };
   }, [orderId]);
 
+  // Demo mode - simulate rider moving along the route
   useEffect(() => {
-    if (!riderPosition || !order) return;
+    if (!DEMO_MODE || !order || !liveStatus) return;
+
+    const kitchenLoc = order.kitchen ? { lat: order.kitchen.latitude, lng: order.kitchen.longitude } : null;
+    const customerLoc = order.deliveryLatitude ? { lat: order.deliveryLatitude, lng: order.deliveryLongitude } : null;
+
+    if (!kitchenLoc || !customerLoc) return;
+
+    const isGoingToRestaurant = liveStatus === 'HEADING_TO_RESTAURANT' || liveStatus === 'ACCEPTED';
+    const isGoingToCustomer = liveStatus === 'PICKED_UP' || liveStatus === 'HEADING_TO_CUSTOMER';
+
+    if (!isGoingToRestaurant && !isGoingToCustomer) {
+      if (demoIntervalRef.current) {
+        clearInterval(demoIntervalRef.current);
+        demoIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const from = isGoingToRestaurant ? customerLoc : kitchenLoc;
+    const to = isGoingToRestaurant ? kitchenLoc : customerLoc;
+
+    fetchRoute(from, to).then((r) => {
+      if (r && r.coords && r.coords.length > 0) {
+        setDemoRoute(r.coords);
+        setDemoRouteIndex(0);
+        setRoute(r.coords);
+        setEta(r.eta);
+        setNextStep(r.steps?.[0] ?? null);
+
+        if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
+
+        demoIntervalRef.current = setInterval(() => {
+          setDemoRouteIndex(prev => {
+            const newIndex = prev + 1;
+            if (newIndex < r.coords.length) {
+              const newPos = r.coords[newIndex];
+              setRiderPosition(newPos);
+              
+              if (newIndex > 0) {
+                const prevPos = r.coords[newIndex - 1];
+                const b = calculateBearing(prevPos, newPos);
+                setBearing(b);
+              }
+
+              const remainingPoints = r.coords.length - newIndex;
+              const newEta = Math.ceil((remainingPoints / r.coords.length) * r.eta);
+              setEta(newEta > 0 ? newEta : 1);
+              
+              return newIndex;
+            } else {
+              clearInterval(demoIntervalRef.current);
+              return prev;
+            }
+          });
+        }, 800);
+      }
+    });
+
+    return () => {
+      if (demoIntervalRef.current) {
+        clearInterval(demoIntervalRef.current);
+        demoIntervalRef.current = null;
+      }
+    };
+  }, [order, liveStatus]);
+
+  useEffect(() => {
+    if (DEMO_MODE || !riderPosition || !order) return;
 
     const rider = { lat: riderPosition[0], lng: riderPosition[1] };
     const pickedUp = ['PICKED_UP', 'HEADING_TO_CUSTOMER'].includes(liveStatus);
-    
     const dest = pickedUp
       ? { lat: order.deliveryLatitude, lng: order.deliveryLongitude }
       : { lat: order.kitchen?.latitude, lng: order.kitchen?.longitude };
@@ -213,16 +273,22 @@ export default function OrderTrackingPage() {
 
   return (
     <div className="max-w-lg mx-auto bg-gray-50 min-h-screen pb-8">
-      {/* Nav */}
+      {DEMO_MODE && (
+        <div className="bg-blue-100 text-blue-700 text-xs px-4 py-2 text-center">
+          🎓 Demo Mode - Simulated delivery tracking
+        </div>
+      )}
+
       <div className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="text-gray-600">← Back</button>
         <span className="flex-1 font-bold">Order #{order.orderNumber}</span>
-        <span className={`text-xs px-2 py-1 rounded-full ${wsConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-          {wsConnected ? '● Live' : '○'}
-        </span>
+        {!DEMO_MODE && (
+          <span className={`text-xs px-2 py-1 rounded-full ${wsConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {wsConnected ? '● Live' : '○'}
+          </span>
+        )}
       </div>
 
-      {/* Banner */}
       <div className="mx-4 mt-4 bg-white rounded-2xl p-4 border-l-4 shadow-sm" style={{ borderLeftColor: banner.color }}>
         <div className="flex items-center gap-3">
           <div className="w-3 h-3 rounded-full" style={{ background: banner.color }} />
@@ -239,7 +305,6 @@ export default function OrderTrackingPage() {
         </div>
       </div>
 
-      {/* Rider Card */}
       {order.deliveryPartner && GPS_ACTIVE_STATUSES.has(liveStatus) && (
         <div className="mx-4 mt-3 bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
@@ -249,7 +314,7 @@ export default function OrderTrackingPage() {
             <p className="font-bold text-sm">{order.deliveryPartner.name}</p>
             <p className="text-xs text-green-600 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              Live tracking
+              {DEMO_MODE ? 'Simulated tracking' : 'Live tracking'}
             </p>
           </div>
           {order.deliveryPartner.phone && (
@@ -260,11 +325,10 @@ export default function OrderTrackingPage() {
         </div>
       )}
 
-      {/* Map */}
       <div className="mx-4 mt-3 bg-white rounded-2xl overflow-hidden shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between border-b">
           <span className="font-semibold text-sm">Live Location</span>
-          {wsConnected && showGPS && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">● LIVE</span>}
+          {showGPS && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">● {DEMO_MODE ? 'Simulated' : 'LIVE'}</span>}
         </div>
         
         <div className="h-64 relative">
@@ -272,7 +336,7 @@ export default function OrderTrackingPage() {
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OSM" />
             {showGPS && <MapPanner position={riderPosition} />}
             {showGPS && <Marker position={riderPosition} icon={makeRiderIcon(bearing)}>
-              <Popup>Your rider</Popup>
+              <Popup>{DEMO_MODE ? '🚴 Simulated Rider' : 'Your rider'}</Popup>
             </Marker>}
             {order.kitchen?.latitude && <Marker position={[order.kitchen.latitude, order.kitchen.longitude]} icon={restaurantIcon}>
               <Popup>Restaurant</Popup>
@@ -293,14 +357,12 @@ export default function OrderTrackingPage() {
           )}
         </div>
 
-        {/* Legend */}
         <div className="px-4 py-2 flex gap-4 text-xs text-gray-500 border-t">
           {order.kitchen?.latitude && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500" /> Kitchen</span>}
           {order.deliveryLatitude && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> You</span>}
           {showGPS && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Rider</span>}
         </div>
 
-        {/* Next turn */}
         {nextStep && showGPS && liveStatus !== 'DELIVERED' && (
           <div className="px-4 py-3 flex items-center gap-3 border-t">
             <span className="text-2xl">{nextStep.maneuver?.type === 'turn' ? '↩️' : '⬆️'}</span>
@@ -313,7 +375,6 @@ export default function OrderTrackingPage() {
         )}
       </div>
 
-      {/* Progress */}
       <div className="mx-4 mt-3 bg-white rounded-2xl p-4 shadow-sm">
         <p className="font-semibold text-sm mb-4">Order Progress</p>
         <div className="space-y-3">
@@ -339,7 +400,6 @@ export default function OrderTrackingPage() {
         </div>
       </div>
 
-      {/* Order Items */}
       {order.items?.length > 0 && (
         <div className="mx-4 mt-3 bg-white rounded-2xl p-4 shadow-sm">
           <p className="font-semibold text-sm mb-3">Your Order</p>
@@ -358,4 +418,15 @@ export default function OrderTrackingPage() {
       )}
     </div>
   );
+}
+
+function calculateBearing(from, to) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const toDeg = (r) => (r * 180) / Math.PI;
+  const dLon = toRad(to[1] - from[1]);
+  const lat1 = toRad(from[0]);
+  const lat2 = toRad(to[0]);
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
