@@ -284,12 +284,21 @@ const LiveMap = ({ order, partnerLocation, signalLost }) => {
         </div>
       )}
 
-      {/* Empty state */}
-      {!partnerLocation && !signalLost && (
+      {/* Empty state - show when NO location yet */}
+      {(!partnerLocation || signalLost) && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 dark:bg-gray-800/80">
           <div className="text-center">
-            <div className="text-4xl mb-2 animate-bounce">🛵</div>
-            <p className="font-body text-sm text-gray-500">Waiting for rider to start...</p>
+            {signalLost ? (
+              <>
+                <div className="text-4xl mb-2">📡</div>
+                <p className="font-body text-sm text-gray-500">Signal lost - rider may be offline</p>
+              </>
+            ) : (
+              <>
+                <div className="text-4xl mb-2 animate-bounce">🛵</div>
+                <p className="font-body text-sm text-gray-500">Waiting for rider to start...</p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -392,9 +401,9 @@ export function OrderDetail() {
     const pollLocation = async () => {
       try {
         const { data } = await trackingAPI.getLastLocation(order.id)
-        const lat = data.latitude
-        const lng = data.longitude
-        console.log('📍 Polled location:', data)
+        const lat = data.latitude ?? data.lat
+        const lng = data.longitude ?? data.lng
+        console.log('📍 Polled location:', data, { lat, lng })
         if (lat && lng && lat !== 0 && lng !== 0) {
           setPartnerLoc({ lat, lng })
           setSignalLost(false)
@@ -425,10 +434,11 @@ export function OrderDetail() {
       topic: `/topic/order/${orderId}/location`,
       callback: (loc) => {
         console.log('Location update received:', loc)
-        // Backend sends latitude/lng, some APIs send lat/lng
+        // Backend sends lng/lat (not longitude/latitude)
         const lat = loc.lat ?? loc.latitude
         const lng = loc.lng ?? loc.longitude
-        if (lat && lng) {
+        console.log('Parsed location:', { lat, lng })
+        if (lat && lng && lat !== 0 && lng !== 0) {
           setPartnerLoc({ lat, lng })
           setSignalLost(false)
           clearTimeout(signalTimer.current)
