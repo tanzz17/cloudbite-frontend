@@ -58,7 +58,7 @@ const BANNER = {
   HEADING_TO_RESTAURANT: { label: 'Rider En Route', color: '#f97316', sub: 'Rider is heading to restaurant.' },
   ARRIVED_AT_RESTAURANT: { label: 'Rider at Restaurant', color: '#f97316', sub: 'Rider arrived, picking up food.' },
   PICKED_UP: { label: 'Food Picked Up!', color: '#8b5cf6', sub: 'Rider heading your way.' },
-  HEADING_TO_CUSTOMER: { label: 'At Your Location!', color: '#10b981', sub: 'Rider has arrived at your address.' },
+  HEADING_TO_CUSTOMER: { label: 'On the way', color: '#f97316', sub: 'Rider is heading to your location.' },
   DELIVERED: { label: 'Delivered 🎉', color: '#10b981', sub: 'Enjoy your meal!' },
 };
 
@@ -121,9 +121,20 @@ export default function OrderTrackingPage() {
   const stompRef = useRef(null);
   const demoIntervalRef = useRef(null);
   const pauseStateRef = useRef({ isPaused: false, pauseEndTime: 0, pauseProcessed: false });
+  const riderStartPosRef = useRef(null);
+  const lastStatusRef = useRef(null);
+  const isNewOrder = useRef(true);
 
   useEffect(() => {
     if (!orderId) return;
+
+    riderStartPosRef.current = null;
+    lastStatusRef.current = null;
+    isNewOrder.current = true;
+    pauseStateRef.current = { isPaused: false, pauseEndTime: 0, pauseProcessed: false };
+    setRiderPosition(null);
+    setRoute(null);
+    setEta(null);
 
     const fetchAll = async () => {
       try {
@@ -141,24 +152,39 @@ export default function OrderTrackingPage() {
     fetchAll();
   }, [orderId]);
 
+  // Poll for status updates every 3 seconds (backup for WebSocket)
   useEffect(() => {
-    if (!orderId || DEMO_MODE) return;
+    if (!orderId) return;
+    
+    const pollStatus = async () => {
+      try {
+        const { data: ord } = await customerAPI.getOrder(orderId);
+        if (ord.status !== liveStatus) {
+          console.log('Status changed:', ord.status);
+          setLiveStatus(ord.status);
+          setOrder(ord);
+        }
+      } catch (e) {}
+    };
+    
+    const interval = setInterval(pollStatus, 3000);
+    return () => clearInterval(interval);
+  }, [orderId, liveStatus]);
+
+  // WebSocket for status updates (always on, even in demo mode)
+  useEffect(() => {
+    if (!orderId) return;
 
     const client = new Client({
       webSocketFactory: () => new SockJS(`${BASE}/ws`),
       reconnectDelay: 4000,
       onConnect: () => {
         setWsConnected(true);
-        client.subscribe(`/topic/order/${orderId}/location`, (msg) => {
-          const data = JSON.parse(msg.body);
-          if (data.latitude && data.longitude) {
-            setRiderPosition([data.latitude, data.longitude]);
-            setBearing(data.bearing ?? 0);
-          }
-          if (data.orderStatus) setLiveStatus(data.orderStatus);
-        });
+        console.log('WS Connected for status updates');
+        
         client.subscribe(`/topic/order/${orderId}/status`, (msg) => {
           const data = JSON.parse(msg.body);
+          console.log('Status update received:', data);
           if (data.status) setLiveStatus(data.status);
         });
       },
@@ -171,7 +197,7 @@ export default function OrderTrackingPage() {
     return () => { client.deactivate(); };
   }, [orderId]);
 
-  // Demo mode - simulate rider moving along the route with realistic speed
+  // Demo mode - follow ACTUAL status from delivery partner
   useEffect(() => {
     if (!DEMO_MODE || !order || !liveStatus) return;
 
@@ -180,10 +206,19 @@ export default function OrderTrackingPage() {
 
     if (!kitchenLoc || !customerLoc) return;
 
-    const isGoingToRestaurant = liveStatus === 'HEADING_TO_RESTAURANT' || liveStatus === 'ACCEPTED';
-    const isGoingToCustomer = liveStatus === 'PICKED_UP' || liveStatus === 'HEADING_TO_CUSTOMER';
+    console.log('Demo mode - status:', liveStatus);
 
-    if (!isGoingToRestaurant && !isGoingToCustomer) {
+    const statuses = {
+      accepted: liveStatus === 'ACCEPTED',
+      headingToRestaurant: liveStatus === 'HEADING_TO_RESTAURANT',
+      atRestaurant: liveStatus === 'ARRIVED_AT_RESTAURANT',
+      pickedUp: liveStatus === 'PICKED_UP',
+      headingToCustomer: liveStatus === 'HEADING_TO_CUSTOMER',
+      delivered: liveStatus === 'DELIVERED',
+    };
+
+    if (statuses.delivered) {
+      console.log('Order delivered');
       if (demoIntervalRef.current) {
         clearInterval(demoIntervalRef.current);
         demoIntervalRef.current = null;
@@ -191,78 +226,156 @@ export default function OrderTrackingPage() {
       return;
     }
 
-    const from = isGoingToRestaurant ? customerLoc : kitchenLoc;
-    const to = isGoingToRestaurant ? kitchenLoc : customerLoc;
+    if (statuses.accepted) {
+      console.log('Accepted - NO GPS yet');
+      if (demoIntervalRef.current) {
+        clearInterval(demoIntervalRef.current);
+        demoIntervalRef.current = null;
+      }
+      setRoute(null);
+      setDemoRoute(null);
+      setRiderPosition(null);
+      setEta(null);
+      return;
+    }
+
+    if (!statuses.headingToRestaurant && !statuses.atRestaurant && !statuses.pickedUp && !statuses.headingToCustomer) {
+      console.log('Not in any active phase');
+      if (demoIntervalRef.current) {
+        clearInterval(demoIntervalRef.current);
+        demoIntervalRef.current = null;
+      }
+      setRoute(null);
+      setDemoRoute(null);
+      setRiderPosition(null);
+      setEta(null);
+      return;
+    }
+
+    let from, to, phase;
+    const isNewPhase = lastStatusRef.current !== liveStatus;
+    lastStatusRef.current = liveStatus;
+
+    if (statuses.headingToRestaurant) {
+      phase = 'toRestaurant';
+      if (isNewPhase || !riderStartPosRef.current) {
+        const startLat = customerLoc.lat + (Math.random() - 0.5) * 0.02;
+        const startLng = customerLoc.lng + (Math.random() - 0.5) * 0.02;
+        riderStartPosRef.current = [startLat, startLng];
+        setRiderPosition([startLat, startLng]);
+      }
+      from = { lat: riderStartPosRef.current[0], lng: riderStartPosRef.current[1] };
+      to = kitchenLoc;
+    } else if (statuses.atRestaurant) {
+      console.log('At restaurant - STAYING until next click');
+      if (demoIntervalRef.current) {
+        clearInterval(demoIntervalRef.current);
+        demoIntervalRef.current = null;
+      }
+      setRiderPosition([kitchenLoc.lat, kitchenLoc.lng]);
+      setRoute(null);
+      setDemoRoute(null);
+      setEta(null);
+      return;
+    } else if (statuses.pickedUp) {
+      console.log('Picked up - at restaurant waiting');
+      if (demoIntervalRef.current) {
+        clearInterval(demoIntervalRef.current);
+        demoIntervalRef.current = null;
+      }
+      setRiderPosition([kitchenLoc.lat, kitchenLoc.lng]);
+      setRoute(null);
+      setDemoRoute(null);
+      setEta(null);
+      return;
+    } else if (statuses.headingToCustomer) {
+      phase = 'toCustomer';
+      from = kitchenLoc;
+      to = customerLoc;
+    }
+
+    console.log('Fetching route:', phase, from, to);
 
     fetchRoute(from, to).then((r) => {
-      if (r && r.coords && r.coords.length > 0) {
-        const totalDuration = r.totalDuration || r.eta * 60;
-        const totalDistance = r.totalDistance || r.coords.length * 10;
-        
-        const speedMetersPerSecond = totalDistance / totalDuration;
-        
-        const route = r.coords;
-        setDemoRoute(route);
-        setRoute(route);
-        setEta(r.eta);
-        setNextStep(r.steps?.[0] ?? null);
-
-        const stepInterval = 400;
-        let currentIndex = 0;
-        const totalSteps = route.length;
-        const baseEta = r.eta;
-        let pauseCount = 0;
-        const maxPauses = 2;
-        
-        const moveStep = () => {
-          if (currentIndex >= route.length - 1) {
-            setRiderPosition(route[route.length - 1]);
-            setEta(0);
-            setIsPaused(false);
-            if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
-            setLiveStatus('DELIVERED');
-            setTimeout(() => navigate('/'), 3000);
-            return;
-          }
-
-          if (pauseStateRef.current.isPaused) {
-            if (Date.now() < pauseStateRef.current.pauseEndTime) {
-              return;
-            } else {
-              pauseStateRef.current.isPaused = false;
-              setIsPaused(false);
-            }
-          }
-
-          const shouldPause = currentIndex > 5 && currentIndex < totalSteps - 5 && pauseCount < maxPauses && Math.random() < 0.2;
-          
-          if (shouldPause) {
-            pauseCount++;
-            pauseStateRef.current.isPaused = true;
-            pauseStateRef.current.pauseEndTime = Date.now() + 10000;
-            setIsPaused(true);
-            return;
-          }
-
-          currentIndex++;
-          const newPos = route[currentIndex];
-          setRiderPosition(newPos);
-
-          if (currentIndex > 0) {
-            const prevPos = route[currentIndex - 1];
-            const b = calculateBearing(prevPos, newPos);
-            setBearing(b);
-          }
-
-          const progress = currentIndex / totalSteps;
-          const newEta = Math.max(1, Math.ceil(baseEta * (1 - progress)));
-          setEta(newEta);
-        };
-
-        if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
-
-        demoIntervalRef.current = setInterval(moveStep, stepInterval);
+      if (!r || !r.coords?.length) {
+        console.log('No route found');
+        return;
       }
+
+      const route = r.coords;
+      setDemoRoute(route);
+      setRoute(route);
+      setEta(r.eta);
+      setNextStep(r.steps?.[0] ?? null);
+      console.log('Route fetched, points:', route.length);
+
+      const stepInterval = 400;
+      let currentIndex = 0;
+      const totalSteps = route.length;
+      const baseEta = r.eta;
+      let pauseCount = 0;
+      const maxPauses = phase === 'toCustomer' ? 2 : 0;
+
+      const moveStep = () => {
+        if (!statuses.headingToRestaurant && !statuses.headingToCustomer) return;
+        
+        const currentHeadingToR = liveStatus === 'HEADING_TO_RESTAURANT';
+        const currentHeadingToC = liveStatus === 'HEADING_TO_CUSTOMER';
+        
+        if ((phase === 'toRestaurant' && !currentHeadingToR) || (phase === 'toCustomer' && !currentHeadingToC)) {
+          console.log('Status changed, stopping');
+          if (demoIntervalRef.current) {
+            clearInterval(demoIntervalRef.current);
+            demoIntervalRef.current = null;
+          }
+          return;
+        }
+
+        if (currentIndex >= route.length - 1) {
+          console.log('Reached destination');
+          setRiderPosition(route[route.length - 1]);
+          setEta(0);
+          setRoute(null);
+          if (demoIntervalRef.current) {
+            clearInterval(demoIntervalRef.current);
+            demoIntervalRef.current = null;
+          }
+          return;
+        }
+
+        if (pauseStateRef.current.isPaused) {
+          if (Date.now() < pauseStateRef.current.pauseEndTime) return;
+          pauseStateRef.current.isPaused = false;
+          setIsPaused(false);
+        }
+
+        const shouldPause = phase === 'toCustomer' && currentIndex > 5 && currentIndex < totalSteps - 5 && pauseCount < maxPauses && Math.random() < 0.2;
+        
+        if (shouldPause) {
+          pauseCount++;
+          pauseStateRef.current.isPaused = true;
+          pauseStateRef.current.pauseEndTime = Date.now() + 10000;
+          setIsPaused(true);
+          return;
+        }
+
+        currentIndex++;
+        const newPos = route[currentIndex];
+        setRiderPosition(newPos);
+
+        if (currentIndex > 0) {
+          const b = calculateBearing(route[currentIndex - 1], newPos);
+          setBearing(b);
+        }
+
+        const progress = currentIndex / totalSteps;
+        const newEta = Math.max(1, Math.ceil(baseEta * (1 - progress)));
+        setEta(newEta);
+      };
+
+      if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
+
+      demoIntervalRef.current = setInterval(moveStep, stepInterval);
     });
 
     return () => {
