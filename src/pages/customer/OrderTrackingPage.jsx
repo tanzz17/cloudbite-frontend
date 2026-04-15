@@ -119,7 +119,7 @@ export default function OrderTrackingPage() {
 
   const stompRef = useRef(null);
   const demoIntervalRef = useRef(null);
-  const pauseStateRef = useRef({ isPaused: false, pauseEndTime: 0 });
+  const pauseStateRef = useRef({ isPaused: false, pauseEndTime: 0, pauseProcessed: false });
 
   useEffect(() => {
     if (!orderId) return;
@@ -234,19 +234,23 @@ export default function OrderTrackingPage() {
 
           if (pauseStateRef.current.isPaused) {
             if (Date.now() < pauseStateRef.current.pauseEndTime) {
+              console.log('Still paused, waiting...');
               return;
             } else {
+              console.log('Pause ended, continuing...');
               pauseStateRef.current.isPaused = false;
+              pauseStateRef.current.pauseProcessed = false;
               setIsPaused(false);
             }
           }
 
           const stop = stopPoints.find(s => s.index === currentIndex);
-          if (stop) {
+          if (stop && !pauseStateRef.current.pauseProcessed) {
             pauseStateRef.current.isPaused = true;
             pauseStateRef.current.pauseEndTime = Date.now() + stop.duration;
+            pauseStateRef.current.pauseProcessed = true;
             setIsPaused(true);
-            console.log(`Rider paused for ${stop.duration/1000}s`);
+            console.log(`Rider paused for ${stop.duration/1000}s at index ${currentIndex}`);
             return;
           }
 
