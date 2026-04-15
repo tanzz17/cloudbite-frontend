@@ -24,6 +24,8 @@ async function fetchRoute(from, to) {
     return {
       coords: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
       eta: Math.ceil(route.duration / 60),
+      totalDuration: route.duration,
+      totalDistance: route.distance,
       steps: route.legs[0].steps,
     };
   } catch {
@@ -84,6 +86,13 @@ const homeIcon = L.divIcon({
   iconAnchor: [17, 17],
 });
 
+const pausedIcon = L.divIcon({
+  className: '',
+  html: `<div style="width:38px;height:38px;background:#ef4444;border-radius:50% 50% 50% 4px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:16px;">🛑</div>`,
+  iconSize: [38, 38],
+  iconAnchor: [19, 19],
+});
+
 function MapPanner({ position }) {
   const map = useMap();
   useEffect(() => {
@@ -106,10 +115,11 @@ export default function OrderTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [wsConnected, setWsConnected] = useState(false);
   const [demoRoute, setDemoRoute] = useState(null);
-  const [demoRouteIndex, setDemoRouteIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const stompRef = useRef(null);
   const demoIntervalRef = useRef(null);
+  const pauseStateRef = useRef({ isPaused: false, pauseEndTime: 0 });
 
   useEffect(() => {
     if (!orderId) return;
@@ -160,7 +170,7 @@ export default function OrderTrackingPage() {
     return () => { client.deactivate(); };
   }, [orderId]);
 
-  // Demo mode - simulate rider moving along the route
+  // Demo mode - simulate rider moving along the route with realistic speed
   useEffect(() => {
     if (!DEMO_MODE || !order || !liveStatus) return;
 
@@ -185,38 +195,78 @@ export default function OrderTrackingPage() {
 
     fetchRoute(from, to).then((r) => {
       if (r && r.coords && r.coords.length > 0) {
-        setDemoRoute(r.coords);
-        setDemoRouteIndex(0);
-        setRoute(r.coords);
+        const totalDuration = r.totalDuration || r.eta * 60;
+        const totalDistance = r.totalDistance || r.coords.length * 10;
+        
+        const speedMetersPerSecond = totalDistance / totalDuration;
+        
+        const route = r.coords;
+        setDemoRoute(route);
+        setRoute(route);
         setEta(r.eta);
         setNextStep(r.steps?.[0] ?? null);
 
+        const stopPoints = [];
+        if (route.length > 10) {
+          const numStops = Math.min(3, Math.floor(route.length / 4));
+          for (let i = 1; i <= numStops; i++) {
+            stopPoints.push({
+              index: Math.floor((route.length / (numStops + 1)) * i),
+              duration: 30000 + Math.random() * 30000
+            });
+          }
+        }
+
+        let currentIndex = 0;
+        let pauseEndTime = 0;
+
+        const moveStep = () => {
+          if (currentIndex >= route.length - 1) {
+            setRiderPosition(route[route.length - 1]);
+            setEta(0);
+            setIsPaused(false);
+            if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
+            return;
+          }
+
+          if (pauseStateRef.current.isPaused) {
+            if (Date.now() < pauseStateRef.current.pauseEndTime) {
+              const remaining = Math.ceil((pauseStateRef.current.pauseEndTime - Date.now()) / 1000);
+              setEta(Math.max(1, Math.ceil(remaining / 60 + (route.length - currentIndex) * 800 / 60000)));
+              return;
+            } else {
+              pauseStateRef.current.isPaused = false;
+              setIsPaused(false);
+            }
+          }
+
+          const stop = stopPoints.find(s => s.index === currentIndex);
+          if (stop) {
+            pauseStateRef.current.isPaused = true;
+            pauseStateRef.current.pauseEndTime = Date.now() + stop.duration;
+            setIsPaused(true);
+            console.log(`Rider paused at waypoint ${currentIndex} for ${stop.duration/1000}s`);
+            return;
+          }
+
+          currentIndex++;
+          const newPos = route[currentIndex];
+          setRiderPosition(newPos);
+
+          if (currentIndex > 0) {
+            const prevPos = route[currentIndex - 1];
+            const b = calculateBearing(prevPos, newPos);
+            setBearing(b);
+          }
+
+          const remainingPoints = route.length - currentIndex;
+          const remainingTime = remainingPoints * 800;
+          setEta(Math.ceil(remainingTime / 60000));
+        };
+
         if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
 
-        demoIntervalRef.current = setInterval(() => {
-          setDemoRouteIndex(prev => {
-            const newIndex = prev + 1;
-            if (newIndex < r.coords.length) {
-              const newPos = r.coords[newIndex];
-              setRiderPosition(newPos);
-              
-              if (newIndex > 0) {
-                const prevPos = r.coords[newIndex - 1];
-                const b = calculateBearing(prevPos, newPos);
-                setBearing(b);
-              }
-
-              const remainingPoints = r.coords.length - newIndex;
-              const newEta = Math.ceil((remainingPoints / r.coords.length) * r.eta);
-              setEta(newEta > 0 ? newEta : 1);
-              
-              return newIndex;
-            } else {
-              clearInterval(demoIntervalRef.current);
-              return prev;
-            }
-          });
-        }, 800);
+        demoIntervalRef.current = setInterval(moveStep, 800);
       }
     });
 
@@ -335,7 +385,7 @@ export default function OrderTrackingPage() {
           <MapContainer center={mapCenter} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OSM" />
             {showGPS && <MapPanner position={riderPosition} />}
-            {showGPS && <Marker position={riderPosition} icon={makeRiderIcon(bearing)}>
+            {showGPS && <Marker position={riderPosition} icon={isPaused ? pausedIcon : makeRiderIcon(bearing)}>
               <Popup>{DEMO_MODE ? '🚴 Simulated Rider' : 'Your rider'}</Popup>
             </Marker>}
             {order.kitchen?.latitude && <Marker position={[order.kitchen.latitude, order.kitchen.longitude]} icon={restaurantIcon}>
