@@ -367,15 +367,15 @@ export default function CustomerHome() {
           </div>
         </div>
 
-        {/* Recommendations */}
-        {recommendations.length > 0 && (
+        {/* Recommendations - only show when cart has items */}
+        {cart?.items?.length > 0 && recommendations.length > 0 && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl shadow-lg">✨</div>
               <div>
-                <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Recommended for you</h2>
+                <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Pairs well with your order</h2>
                 <p className="font-body text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                  {cart?.items?.length ? "Based on what's in your cart" : 'Popular dishes right now'}
+                  Based on what's in your cart
                 </p>
               </div>
             </div>

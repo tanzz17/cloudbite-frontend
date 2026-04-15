@@ -278,8 +278,8 @@ export default function CartPage() {
             </div>
           ))}
 
-          {/* Recommendations */}
-          {recommendations.length > 0 && (
+          {/* Recommendations - only show when cart has items */}
+          {cart?.items?.length > 0 && recommendations.length > 0 && (
             <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-200 dark:border-amber-800 shadow-lg">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">✨</span>
