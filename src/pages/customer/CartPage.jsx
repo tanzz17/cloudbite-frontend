@@ -86,6 +86,13 @@ export default function CartPage() {
   }, [items, kitchenMenu])
 
   const handleQty = async (cartItemId, qty) => {
+    if (qty <= 0) {
+      try { 
+        await updateItem(cartItemId, 0) 
+        toast.success('Item removed from cart')
+      } catch { toast.error('Failed to remove') }
+      return
+    }
     try { await updateItem(cartItemId, qty) } catch { toast.error('Failed to update') }
   }
 
