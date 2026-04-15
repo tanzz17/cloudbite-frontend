@@ -57,10 +57,14 @@ export default function BrowseByDish() {
   const sorted = [...dishes]
     .filter(d => !vegOnly || d.isVeg)
     .sort((a, b) => {
-      if (sortBy === 'price-asc')  return a.price - b.price
-      if (sortBy === 'price-desc') return b.price - a.price
+      if (sortBy === 'price-asc')  return (a.price || 0) - (b.price || 0)
+      if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0)
+      if (sortBy === 'bestseller') {
+        const aBest = a.isBestSeller ? 1 : 0
+        const bBest = b.isBestSeller ? 1 : 0
+        return bBest - aBest
+      }
       if (sortBy === 'rating')     return (b.kitchenRating||0) - (a.kitchenRating||0)
-      if (sortBy === 'bestseller') return (b.isBestSeller ? 1 : 0) - (a.isBestSeller ? 1 : 0)
       return 0
     })
 
@@ -107,16 +111,21 @@ export default function BrowseByDish() {
 
       {/* ── Filters ───────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-          className="px-4 py-2 rounded-xl bg-white dark:bg-[#1a1108] border border-amber-100 dark:border-amber-900/40 font-body text-sm text-gray-700 dark:text-gray-300 focus:border-amber-400 focus:outline-none">
-          <option value="rating">Sort: Top Rated</option>
-          <option value="bestseller">Sort: Bestsellers First</option>
-          <option value="price-asc">Sort: Price Low → High</option>
-          <option value="price-desc">Sort: Price High → Low</option>
-        </select>
+        <div className="relative">
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+            className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-[#1a1108] border-2 border-amber-100 dark:border-amber-900/40 font-body text-sm text-gray-700 dark:text-gray-300 focus:border-amber-400 focus:outline-none shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+            <option value="rating">⭐ Top Rated</option>
+            <option value="bestseller">🔥 Bestsellers</option>
+            <option value="price-asc">⬆️ Price: Low to High</option>
+            <option value="price-desc">⬇️ Price: High to Low</option>
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
 
         <button onClick={() => setVegOnly(v => !v)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-body font-bold text-sm border-2 transition-all ${vegOnly ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'border-amber-100 dark:border-amber-900/40 text-gray-600 dark:text-gray-400 bg-white dark:bg-[#1a1108]'}`}>
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-body font-bold text-sm border-2 transition-all ${vegOnly ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 shadow-md' : 'border-amber-100 dark:border-amber-900/40 text-gray-600 dark:text-gray-400 bg-white dark:bg-[#1a1108]'}`}>
           🟢 Veg Only {vegOnly && '✓'}
         </button>
       </div>
