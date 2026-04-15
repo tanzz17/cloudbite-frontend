@@ -57,7 +57,7 @@ const BANNER = {
   HEADING_TO_RESTAURANT: { label: 'Rider En Route', color: '#f97316', sub: 'Rider is heading to restaurant.' },
   ARRIVED_AT_RESTAURANT: { label: 'Rider at Restaurant', color: '#f97316', sub: 'Rider arrived, picking up food.' },
   PICKED_UP: { label: 'Food Picked Up!', color: '#8b5cf6', sub: 'Rider heading your way.' },
-  HEADING_TO_CUSTOMER: { label: 'On the Way to You!', color: '#8b5cf6', sub: 'Hold tight, almost there.' },
+  HEADING_TO_CUSTOMER: { label: 'At Your Location!', color: '#10b981', sub: 'Rider has arrived at your address.' },
   DELIVERED: { label: 'Delivered 🎉', color: '#10b981', sub: 'Enjoy your meal!' },
 };
 
@@ -210,7 +210,8 @@ export default function OrderTrackingPage() {
         let currentIndex = 0;
         const totalSteps = route.length;
         const baseEta = r.eta;
-        const processedStops = new Set();
+        let pauseCount = 0;
+        const maxPauses = 2;
         
         const moveStep = () => {
           if (currentIndex >= route.length - 1) {
@@ -230,12 +231,12 @@ export default function OrderTrackingPage() {
             }
           }
 
-          const shouldPause = currentIndex > 0 && currentIndex < totalSteps - 1 && !processedStops.has(currentIndex) && Math.random() < 0.15;
+          const shouldPause = currentIndex > 5 && currentIndex < totalSteps - 5 && pauseCount < maxPauses && Math.random() < 0.2;
           
           if (shouldPause) {
-            processedStops.add(currentIndex);
+            pauseCount++;
             pauseStateRef.current.isPaused = true;
-            pauseStateRef.current.pauseEndTime = Date.now() + 3000 + Math.random() * 2000;
+            pauseStateRef.current.pauseEndTime = Date.now() + 10000;
             setIsPaused(true);
             return;
           }
