@@ -208,15 +208,16 @@ export default function OrderTrackingPage() {
 
         const stopPoints = [];
         if (route.length > 10) {
-          const numStops = Math.min(3, Math.floor(route.length / 4));
+          const numStops = Math.min(2, Math.floor(route.length / 6));
           for (let i = 1; i <= numStops; i++) {
             stopPoints.push({
               index: Math.floor((route.length / (numStops + 1)) * i),
-              duration: 30000 + Math.random() * 30000
+              duration: 5000 + Math.random() * 5000
             });
           }
         }
 
+        const stepInterval = 500;
         let currentIndex = 0;
         let pauseEndTime = 0;
 
@@ -231,8 +232,6 @@ export default function OrderTrackingPage() {
 
           if (pauseStateRef.current.isPaused) {
             if (Date.now() < pauseStateRef.current.pauseEndTime) {
-              const remaining = Math.ceil((pauseStateRef.current.pauseEndTime - Date.now()) / 1000);
-              setEta(Math.max(1, Math.ceil(remaining / 60 + (route.length - currentIndex) * 800 / 60000)));
               return;
             } else {
               pauseStateRef.current.isPaused = false;
@@ -260,13 +259,13 @@ export default function OrderTrackingPage() {
           }
 
           const remainingPoints = route.length - currentIndex;
-          const remainingTime = remainingPoints * 800;
-          setEta(Math.ceil(remainingTime / 60000));
+          const remainingSeconds = (remainingPoints * stepInterval) / 1000;
+          setEta(Math.max(1, Math.ceil(remainingSeconds / 60)));
         };
 
         if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
 
-        demoIntervalRef.current = setInterval(moveStep, 800);
+        demoIntervalRef.current = setInterval(moveStep, stepInterval);
       }
     });
 
