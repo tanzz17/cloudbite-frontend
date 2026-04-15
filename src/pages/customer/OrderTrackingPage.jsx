@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { customerAPI, trackingAPI } from '../services/api';
+import { customerAPI, trackingAPI } from '../../services/api';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://cloudbite-backend-msab.onrender.com';
 
