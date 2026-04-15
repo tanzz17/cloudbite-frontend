@@ -7,6 +7,8 @@ export function useGPSSender(orderId, riderId, isActive) {
   const intervalRef = useRef(null);
   const prevCoords = useRef(null);
 
+  console.log('📡 useGPSSender params:', { orderId, riderId, isActive });
+
   const startSending = useCallback(() => {
     if (!navigator.geolocation) {
       console.error('Geolocation not supported');
@@ -58,10 +60,11 @@ export function useGPSSender(orderId, riderId, isActive) {
   }, []);
 
   useEffect(() => {
+    console.log('📍 useGPSSender useEffect:', { isActive, orderId, riderId });
     if (isActive) startSending();
     else stopSending();
     return () => stopSending();
-  }, [isActive]);
+  }, [isActive, orderId, riderId]);
 
   return { startSending, stopSending };
 }
