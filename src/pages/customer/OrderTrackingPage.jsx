@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { customerAPI, trackingAPI } from '../../services/api';
+import { formatCurrency, formatDate } from '../../utils/helpers';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://cloudbite-backend-msab.onrender.com';
 
@@ -452,9 +453,29 @@ export default function OrderTrackingPage() {
               <span className="font-semibold">₹{item.totalPrice || item.itemPrice * item.quantity}</span>
             </div>
           ))}
-          <div className="flex justify-between text-sm font-bold border-t mt-2 pt-2">
-            <span>Total</span>
-            <span className="text-orange-500">₹{order.totalAmount}</span>
+          
+          <div className="border-t mt-3 pt-2 space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Subtotal</span>
+              <span>₹{order.subtotal || order.totalAmount}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Delivery Fee</span>
+              <span>₹{order.deliveryFee || 0}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Tax (GST)</span>
+              <span>₹{order.tax || 0}</span>
+            </div>
+            <div className="flex justify-between text-sm font-bold border-t mt-2 pt-2">
+              <span>Total</span>
+              <span className="text-orange-500">₹{order.totalAmount}</span>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t text-center">
+            <p className="text-xs text-gray-400 mb-1">☕ Your food, delivered to your door 🏠</p>
+            <p className="text-[10px] text-amber-600">© 2024 CloudBite. Made with ❤️ for Maharashtra's home kitchens.</p>
           </div>
         </div>
       )}
