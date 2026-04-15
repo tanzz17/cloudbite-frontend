@@ -4,10 +4,16 @@ import { Modal, ConfirmModal, EmptyState } from '../../components/common/index'
 import { formatCurrency } from '../../utils/helpers'
 import toast from 'react-hot-toast'
 
-const CATEGORIES = ['Starters', 'Main Course', 'Breads', 'Rice & Biryani', 'Desserts', 'Beverages', 'Snacks', 'Combos', 'Soups', 'Salads']
-const asArray = (value) => Array.isArray(value) ? value : []
+const CATEGORIES = ['Breakfast', 'Starters', 'Main Course', 'Desserts']
 
-const emptyForm = { name: '', description: '', price: '', category: '', imageUrl: '', isVeg: true, preparationTime: 20 }
+const SUB_CATEGORIES = {
+  'Breakfast': ['South Indian', 'Maharashtrian', 'Sandwiches', 'Parathas', 'Chai & Coffee', 'Poha & Upma', 'Idli & Dosa', 'Bhel & Sev'],
+  'Starters': ['Chinese Starters', 'Indian Starters', 'Momos', 'Fried Rice', 'Noodles', 'Tandoor Starters', 'Pakodas', 'Rolls'],
+  'Main Course': ['Indian Main Course', 'Chinese', 'Breads', 'Rice', 'Pulao & Biryani', 'Curries', 'Dal & Sambar', 'Rajasthani', 'Punjabi'],
+  'Desserts': ['Cakes', 'Indian Desserts', 'Fusion Desserts', 'Ice Creams', 'Shakes', 'Pastries', 'Mithai']
+}
+
+const emptyForm = { name: '', description: '', price: '', category: '', subCategory: '', imageUrl: '', isVeg: true, preparationTime: 20 }
 
 export default function KitchenMenu() {
   const [items, setItems] = useState([])
@@ -29,7 +35,16 @@ export default function KitchenMenu() {
 
   const handleOpenForm = (item = null) => {
     setEditItem(item)
-    setForm(item ? { name: item.name, description: item.description || '', price: item.price, category: item.category || '', imageUrl: item.imageUrl || '', isVeg: item.isVeg, preparationTime: item.preparationTime || 20 } : emptyForm)
+    setForm(item ? { 
+        name: item.name, 
+        description: item.description || '', 
+        price: item.price, 
+        category: item.category || '', 
+        subCategory: item.subCategory || '',
+        imageUrl: item.imageUrl || '', 
+        isVeg: item.isVeg, 
+        preparationTime: item.preparationTime || 20 
+      } : emptyForm)
     setShowForm(true)
   }
 
@@ -134,6 +149,9 @@ export default function KitchenMenu() {
                     {item.category && (
                       <span className="text-xs font-body bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-lg">{item.category}</span>
                     )}
+                    {item.subCategory && (
+                      <span className="text-xs font-body bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-lg">{item.subCategory}</span>
+                    )}
                   </div>
                   <div className="flex gap-1">
                     <button onClick={() => handleOpenForm(item)} className="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 transition-colors font-body font-bold">✏️ Edit</button>
@@ -160,11 +178,20 @@ export default function KitchenMenu() {
             </div>
             <div>
               <label className="input-label">Category *</label>
-              <select value={form.category} onChange={set('category')} className="input-field" required>
+              <select value={form.category} onChange={e => { set('category')(e); setForm(p => ({...p, subCategory: ''})) }} className="input-field" required>
                 <option value="">Select category</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
+            {form.category && SUB_CATEGORIES[form.category] && (
+              <div>
+                <label className="input-label">Sub Category</label>
+                <select value={form.subCategory} onChange={set('subCategory')} className="input-field">
+                  <option value="">Select sub category (optional)</option>
+                  {SUB_CATEGORIES[form.category].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label className="input-label">Preparation Time (min)</label>
               <input type="number" value={form.preparationTime} onChange={set('preparationTime')} className="input-field" min="1" max="120" />
