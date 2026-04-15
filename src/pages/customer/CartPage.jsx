@@ -280,19 +280,47 @@ export default function CartPage() {
 
           {/* Recommendations */}
           {recommendations.length > 0 && (
-            <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-200 dark:border-amber-800">
-              <p className="font-display font-bold text-sm text-gray-900 dark:text-white mb-1 flex items-center gap-2">✨ Pairs well with your order</p>
-              <p className="text-xs font-body text-amber-600 dark:text-amber-400 mb-3">Add-ons recommended from this kitchen</p>
-              <div className="grid grid-cols-3 gap-2">
+            <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-200 dark:border-amber-800 shadow-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">✨</span>
+                <p className="font-display font-bold text-base text-gray-900 dark:text-white">Pairs well with your order</p>
+              </div>
+              <p className="text-xs font-body text-amber-600 dark:text-amber-400 mb-4">Handpicked add-ons from this kitchen</p>
+              <div className="grid grid-cols-3 gap-3">
                 {recommendations.map(item => (
-                  <div key={item.id} className="bg-white dark:bg-[#1a1108] rounded-xl p-2.5 border border-amber-100 dark:border-amber-900/40 hover:border-amber-400 transition-all cursor-pointer group" onClick={() => handleAddRec(item.id)}>
-                    <div className="h-14 rounded-lg overflow-hidden bg-amber-50 dark:bg-amber-900/20 mb-2 flex items-center justify-center">
-                      {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <span className="text-2xl">{item.isVeg ? '🥬' : '🍖'}</span>}
+                  <div 
+                    key={item.id} 
+                    className="relative bg-white dark:bg-[#1a1108] rounded-2xl p-3 border border-amber-100 dark:border-amber-900/40 hover:border-amber-400 hover:shadow-xl hover:shadow-amber-200/50 dark:hover:shadow-amber-900/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+                    onClick={() => handleAddRec(item.id)}
+                  >
+                    <div className="relative h-20 rounded-xl overflow-hidden bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 mb-2">
+                      {item.imageUrl ? (
+                        <img 
+                          src={item.imageUrl} 
+                          alt="" 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-amber-200 to-orange-200">
+                          {item.isVeg ? '🥬' : '🍖'}
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <p className="font-body font-bold text-[11px] text-gray-900 dark:text-white truncate">{item.name}</p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[10px] font-bold text-amber-600">{formatCurrency(item.price)}</span>
-                      <button disabled={addingId === item.id} className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500 text-white">{addingId === item.id ? '...' : '+ Add'}</button>
+                    <div className="text-center">
+                      <p className="font-body font-bold text-xs text-gray-900 dark:text-white truncate">{item.name}</p>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <span className="text-xs font-bold text-amber-600">{formatCurrency(item.price)}</span>
+                        <button 
+                          disabled={addingId === item.id} 
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md group-hover:shadow-amber-400/50 transition-all"
+                        >
+                          {addingId === item.id ? '...' : '+ Add'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[10px]">+</span>
                     </div>
                   </div>
                 ))}
