@@ -9,7 +9,6 @@ const WS_URL = import.meta.env.VITE_API_URL
 export const useWebSocket = (subscriptions = []) => {
   const clientRef = useRef(null)
   const subscriptionsRef = useRef(subscriptions)
-  const shouldLogRef = useRef(false)
 
   useEffect(() => {
     subscriptionsRef.current = subscriptions
@@ -17,15 +16,20 @@ export const useWebSocket = (subscriptions = []) => {
 
   useEffect(() => {
     const token = localStorage.getItem('cloudbite_token')
-    if (!token) return
+    if (!token) {
+      console.log('🔌 No token - WebSocket not connecting')
+      return
+    }
 
-    shouldLogRef.current = true
+    console.log('🔌 Connecting WebSocket...')
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       onConnect: () => {
+        console.log('✅ WebSocket Connected! Subscribing to:', subscriptionsRef.current.map(s => s.topic))
         subscriptionsRef.current.forEach(({ topic, callback }) => {
+          console.log('📡 Subscribed to:', topic)
           client.subscribe(topic, (message) => {
             try {
               callback(JSON.parse(message.body))
@@ -36,14 +40,10 @@ export const useWebSocket = (subscriptions = []) => {
         })
       },
       onDisconnect: () => {
-        if (import.meta.env.DEV && shouldLogRef.current) {
-          console.log('WS disconnected')
-        }
+        console.log('🔌 WebSocket disconnected')
       },
       onStompError: (frame) => {
-        if (import.meta.env.DEV) {
-          console.error('STOMP error', frame)
-        }
+        console.error('❌ STOMP error:', frame)
       },
     })
 
@@ -51,7 +51,6 @@ export const useWebSocket = (subscriptions = []) => {
     clientRef.current = client
 
     return () => {
-      shouldLogRef.current = false
       client.deactivate()
     }
   }, [])

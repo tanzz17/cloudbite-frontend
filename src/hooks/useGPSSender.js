@@ -13,6 +13,8 @@ export function useGPSSender(orderId, riderId, isActive) {
       return;
     }
 
+    console.log('🛰️ GPS tracking STARTED for order:', orderId, 'rider:', riderId);
+
     intervalRef.current = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -24,6 +26,8 @@ export function useGPSSender(orderId, riderId, isActive) {
           }
           prevCoords.current = { latitude, longitude };
 
+          console.log('📍 Sending GPS:', { orderId, riderId, latitude, longitude });
+          
           axios.post(`${BASE_URL}/api/tracking/location`, {
             orderId,
             riderId,
@@ -31,9 +35,15 @@ export function useGPSSender(orderId, riderId, isActive) {
             longitude,
             bearing,
             speed: speed ? speed * 3.6 : 0,
-          }).catch(() => {});
+          }).then(() => {
+            console.log('✅ GPS sent successfully');
+          }).catch((err) => {
+            console.error('❌ GPS send failed:', err);
+          });
         },
-        () => {},
+        (err) => {
+          console.error('❌ Geolocation error:', err);
+        },
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
     }, 3000);
@@ -41,8 +51,9 @@ export function useGPSSender(orderId, riderId, isActive) {
 
   const stopSending = useCallback(() => {
     if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+      console.log('🛑 GPS tracking STOPPED')
     }
   }, []);
 
