@@ -202,55 +202,15 @@ export default function OrderTrackingPage() {
         
         const route = r.coords;
         setDemoRoute(route);
-        setRoute(route);
+setRoute(route);
         setEta(r.eta);
         setNextStep(r.steps?.[0] ?? null);
 
-        const stopPoints = [];
-        if (route.length > 10) {
-          const numStops = Math.min(2, Math.floor(route.length / 6));
-          for (let i = 1; i <= numStops; i++) {
-            stopPoints.push({
-              index: Math.floor((route.length / (numStops + 1)) * i),
-              duration: 3000 + Math.random() * 2000
-            });
-          }
-        }
-
-        const stepInterval = 400;
-        let currentIndex = 0;
-        let pauseEndTime = 0;
-        const totalSteps = route.length;
-        const baseEta = r.eta;
-        
         const moveStep = () => {
           if (currentIndex >= route.length - 1) {
             setRiderPosition(route[route.length - 1]);
             setEta(0);
-            setIsPaused(false);
             if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
-            return;
-          }
-
-          if (pauseStateRef.current.isPaused) {
-            if (Date.now() < pauseStateRef.current.pauseEndTime) {
-              console.log('Still paused, waiting...');
-              return;
-            } else {
-              console.log('Pause ended, continuing...');
-              pauseStateRef.current.isPaused = false;
-              pauseStateRef.current.pauseProcessed = false;
-              setIsPaused(false);
-            }
-          }
-
-          const stop = stopPoints.find(s => s.index === currentIndex);
-          if (stop && !pauseStateRef.current.pauseProcessed) {
-            pauseStateRef.current.isPaused = true;
-            pauseStateRef.current.pauseEndTime = Date.now() + stop.duration;
-            pauseStateRef.current.pauseProcessed = true;
-            setIsPaused(true);
-            console.log(`Rider paused for ${stop.duration/1000}s at index ${currentIndex}`);
             return;
           }
 
