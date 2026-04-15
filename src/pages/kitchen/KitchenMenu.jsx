@@ -27,8 +27,14 @@ export default function KitchenMenu() {
 
   const fetch = () => {
     kitchenAPI.getMenu()
-      .then(r => setItems(asArray(r.data)))
-      .catch(err => { if (err.response?.status !== 404) toast.error('Failed to load menu') })
+      .then(r => { 
+        console.log('Menu loaded:', r.data); 
+        setItems(Array.isArray(r.data) ? r.data : []) 
+      })
+      .catch(err => { 
+        console.error('Menu load error:', err); 
+        if (err.response?.status !== 404) toast.error('Failed to load menu') 
+      })
       .finally(() => setLoading(false))
   }
   useEffect(() => { fetch() }, [])
