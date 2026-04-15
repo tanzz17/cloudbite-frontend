@@ -106,73 +106,81 @@ export default function KitchenMenuPage() {
   return (
     <div className="max-w-3xl mx-auto pb-24">
       {/* ── Cover + kitchen info ───────────────────────── */}
-      <div className="relative h-56 md:h-72 overflow-hidden rounded-b-3xl shadow-2xl">
+      <div className="relative h-48 md:h-56 overflow-hidden rounded-b-3xl shadow-2xl">
         {kitchen?.coverImage
-          ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-cover scale-105 hover:scale-110 transition-transform duration-700" />
-          : <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-8xl mb-2 animate-pulse-slow">🍽️</div>
-                <div className="font-display text-white/90 text-2xl font-bold tracking-wide">Delicious Food</div>
-              </div>
+          ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-cover" />
+          : <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500">
+              <div className="absolute inset-0 opacity-30" style={{backgroundImage: 'radial-gradient(circle at 20% 80%, white 0%, transparent 50%), radial-gradient(circle at 80% 20%, white 0%, transparent 50%)'}} />
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-6xl animate-float-1">🍛</div>
+              <div className="absolute top-10 right-16 text-4xl animate-float-2">🍜</div>
+              <div className="absolute top-16 left-12 text-3xl animate-float-3">🥘</div>
             </div>}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        {/* Floating particles effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute w-2 h-2 bg-amber-300/30 rounded-full animate-float-1" style={{top: '20%', left: '10%'}} />
-          <div className="absolute w-3 h-3 bg-orange-300/30 rounded-full animate-float-2" style={{top: '60%', left: '80%'}} />
-          <div className="absolute w-2 h-2 bg-amber-200/40 rounded-full animate-float-3" style={{top: '40%', left: '60%'}} />
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        
+        {/* Decorative overlay pattern */}
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)'}} />
+        
+        {/* Kitchen name badge */}
+        <div className="absolute top-4 left-4">
+          <div className="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full">
+            <span className="text-white/90 text-xs font-medium">🍳 {kitchen?.cuisineType}</span>
+          </div>
         </div>
+        
         {/* Cart button */}
         {cartCount > 0 && (
           <button onClick={() => navigate('/cart')}
-            className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-body font-bold px-5 py-2.5 rounded-2xl shadow-lg flex items-center gap-2 hover:scale-110 hover:shadow-xl transition-all animate-bounce-soft">
-            🛒 <span className="bg-white/20 px-2 py-0.5 rounded-lg">{cartCount}</span>
+            className="absolute top-4 right-4 bg-white text-amber-600 font-body font-bold px-4 py-2 rounded-full shadow-xl flex items-center gap-2 hover:scale-105 hover:shadow-2xl transition-all">
+            🛒 <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{cartCount}</span>
           </button>
         )}
-        <div className="absolute bottom-5 left-5 right-5">
-          <div className="flex items-end gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center flex-shrink-0">
-              {kitchen?.logoImage ? <img src={kitchen.logoImage} alt="" className="w-full h-full object-cover" /> : <span className="text-3xl">🏠</span>}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="font-display text-2xl md:text-3xl font-bold text-white drop-shadow-lg truncate">{kitchen?.name}</h1>
-              <p className="text-white/80 text-sm font-body flex items-center gap-2">
-                <span>🍳 {kitchen?.cuisineType}</span>
-              </p>
+        
+        {/* Kitchen info card */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 border-3 border-white shadow-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {kitchen?.logoImage ? <img src={kitchen.logoImage} alt="" className="w-full h-full object-cover" /> : <span className="text-2xl">🏠</span>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="font-display text-xl md:text-2xl font-bold text-gray-900 truncate">{kitchen?.name}</h1>
+                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                  <span className="flex items-center gap-1">⏱️ {kitchen?.estimatedDeliveryTime||30} min</span>
+                  <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                  <span className="flex items-center gap-1">🚚 {formatCurrency(kitchen?.deliveryFee)}</span>
+                  <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                  <span className="flex items-center gap-1">₹{kitchen?.minOrderAmount} min</span>
+                </div>
+              </div>
+              <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${kitchen?.isOpen ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                {kitchen?.isOpen ? 'Open' : 'Closed'}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Kitchen meta bar */}
-      <div className="px-4 py-4 bg-white dark:bg-[#1a1108] border-b border-amber-100 dark:border-amber-900/40">
-        <div className="flex items-center gap-4 text-sm font-body flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg">⏱️</span>
-            <span className="font-bold text-gray-700 dark:text-gray-300">{kitchen?.estimatedDeliveryTime||30} <span className="font-normal text-gray-500">min</span></span>
+      {/* Kitchen meta bar - simplified */}
+      <div className="px-4 py-3 bg-white dark:bg-[#1a1108] border-b border-amber-100 dark:border-amber-900/40">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-sm font-body">
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">⏱️</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300">{kitchen?.estimatedDeliveryTime||30} <span className="font-normal text-gray-500">min</span></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">🚚</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300">{formatCurrency(kitchen?.deliveryFee)}</span>
+            </div>
           </div>
-          <span className="w-px h-4 bg-gray-200" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg">🚚</span>
-            <span className="font-bold text-gray-700 dark:text-gray-300">{formatCurrency(kitchen?.deliveryFee)}</span>
-            <span className="text-gray-400 text-xs">delivery</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-body text-gray-500">Veg Only</span>
+            <button onClick={() => setVegOnly(v => !v)}
+              className={`relative w-11 h-5.5 rounded-full transition-all duration-300 ${vegOnly ? 'bg-green-500 shadow-lg shadow-green-400/50' : 'bg-gray-200 dark:bg-gray-700'}`}>
+              <span className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white shadow-md transition-transform duration-300 ${vegOnly ? 'translate-x-6' : 'translate-x-0.5'}`} />
+            </button>
           </div>
-          <span className="w-px h-4 bg-gray-200" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg">🛒</span>
-            <span className="font-bold text-gray-700 dark:text-gray-300">₹{kitchen?.minOrderAmount}</span>
-            <span className="text-gray-400 text-xs">min order</span>
-          </div>
-          <span className={`ml-auto font-bold px-3 py-1 rounded-full text-sm ${kitchen?.isOpen ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-            {kitchen?.isOpen ? '🟢 Open' : '🔴 Closed'}
-          </span>
-        </div>
-        <div className="mt-3 flex items-center gap-2">
-          <span className="text-sm font-body text-gray-500">Veg Only</span>
-          <button onClick={() => setVegOnly(v => !v)}
-            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${vegOnly ? 'bg-green-500 shadow-lg shadow-green-400/50' : 'bg-gray-200 dark:bg-gray-700'}`}>
-            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${vegOnly ? 'translate-x-6' : 'translate-x-0.5'}`} />
-          </button>
         </div>
       </div>
 
