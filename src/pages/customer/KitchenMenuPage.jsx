@@ -98,50 +98,72 @@ export default function KitchenMenuPage() {
   return (
     <div className="max-w-3xl mx-auto pb-24">
       {/* ── Cover + kitchen info ───────────────────────── */}
-      <div className="relative h-52 md:h-64 overflow-hidden rounded-b-3xl">
+      <div className="relative h-56 md:h-72 overflow-hidden rounded-b-3xl shadow-2xl">
         {kitchen?.coverImage
-          ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700" />
-          : <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-8xl">🍽️</div>}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          ? <img src={kitchen.coverImage} alt={kitchen.name} className="w-full h-full object-cover scale-105 hover:scale-110 transition-transform duration-700" />
+          : <div className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-8xl mb-2 animate-pulse-slow">🍽️</div>
+                <div className="font-display text-white/90 text-2xl font-bold tracking-wide" style={{fontFamily: 'serif'}}>स्वादिष्ट पदार्थ</div>
+              </div>
+            </div>}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        {/* Floating particles effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute w-2 h-2 bg-amber-300/30 rounded-full animate-float-1" style={{top: '20%', left: '10%'}} />
+          <div className="absolute w-3 h-3 bg-orange-300/30 rounded-full animate-float-2" style={{top: '60%', left: '80%'}} />
+          <div className="absolute w-2 h-2 bg-amber-200/40 rounded-full animate-float-3" style={{top: '40%', left: '60%'}} />
+        </div>
         {/* Cart button */}
         {cartCount > 0 && (
           <button onClick={() => navigate('/cart')}
-            className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-body font-bold px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
-            🛒 {cartCount} items
+            className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-body font-bold px-5 py-2.5 rounded-2xl shadow-lg flex items-center gap-2 hover:scale-110 hover:shadow-xl transition-all animate-bounce-soft">
+            🛒 <span className="bg-white/20 px-2 py-0.5 rounded-lg">{cartCount}</span>
           </button>
         )}
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="flex items-end gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-white border-2 border-white shadow-xl overflow-hidden flex items-center justify-center flex-shrink-0">
-              {kitchen?.logoImage ? <img src={kitchen.logoImage} alt="" className="w-full h-full object-cover" /> : <span className="text-2xl">🏠</span>}
+        <div className="absolute bottom-5 left-5 right-5">
+          <div className="flex items-end gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-white border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center flex-shrink-0">
+              {kitchen?.logoImage ? <img src={kitchen.logoImage} alt="" className="w-full h-full object-cover" /> : <span className="text-3xl">🏠</span>}
             </div>
-            <div>
-              <h1 className="font-display text-2xl font-bold text-white">{kitchen?.name}</h1>
-              <p className="text-white/70 text-sm font-body">{kitchen?.cuisineType}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-white drop-shadow-lg truncate">{kitchen?.name}</h1>
+              <p className="text-white/80 text-sm font-body flex items-center gap-2">
+                <span>🍳 {kitchen?.cuisineType}</span>
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Kitchen meta bar */}
-      <div className="px-4 py-3 bg-white dark:bg-[#1a1108] border-b border-amber-100 dark:border-amber-900/40 flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-3 text-sm font-body flex-wrap">
-          <span className="font-bold text-yellow-500">⭐ {kitchen?.rating?.toFixed(1) || 'New'}</span>
-          <span className="text-gray-300">·</span>
-          <span className="text-gray-500">⏱️ {kitchen?.estimatedDeliveryTime||30} min</span>
-          <span className="text-gray-300">·</span>
-          <span className="text-gray-500">🚚 {formatCurrency(kitchen?.deliveryFee)}</span>
-          <span className="text-gray-300">·</span>
-          <span className="text-gray-500">Min. {formatCurrency(kitchen?.minOrderAmount)}</span>
-          <span className={`font-bold ${kitchen?.isOpen ? 'text-green-600' : 'text-red-500'}`}>
-            {kitchen?.isOpen ? '🟢 Open' : '🔴 Closed'}
+      <div className="px-4 py-4 bg-white dark:bg-[#1a1108] border-b border-amber-100 dark:border-amber-900/40">
+        <div className="flex items-center gap-4 text-sm font-body flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg">⏱️</span>
+            <span className="font-bold text-gray-700 dark:text-gray-300">{kitchen?.estimatedDeliveryTime||30} <span className="font-normal text-gray-500">min</span></span>
+          </div>
+          <span className="w-px h-4 bg-gray-200" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg">🚚</span>
+            <span className="font-bold text-gray-700 dark:text-gray-300">{formatCurrency(kitchen?.deliveryFee)}</span>
+            <span className="text-gray-400 text-xs">delivery</span>
+          </div>
+          <span className="w-px h-4 bg-gray-200" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg">🛒</span>
+            <span className="font-bold text-gray-700 dark:text-gray-300">₹{kitchen?.minOrderAmount}</span>
+            <span className="text-gray-400 text-xs">min order</span>
+          </div>
+          <span className={`ml-auto font-bold px-3 py-1 rounded-full text-sm ${kitchen?.isOpen ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+            {kitchen?.isOpen ? '🟢 खुले' : '🔴 बंद'}
           </span>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-sm font-body text-gray-600 dark:text-gray-400">Veg only</span>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-sm font-body text-gray-500">शुद्ध वनस्पती</span>
           <button onClick={() => setVegOnly(v => !v)}
-            className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${vegOnly ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
-            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${vegOnly ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${vegOnly ? 'bg-green-500 shadow-lg shadow-green-400/50' : 'bg-gray-200 dark:bg-gray-700'}`}>
+            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${vegOnly ? 'translate-x-6' : 'translate-x-0.5'}`} />
           </button>
         </div>
       </div>
@@ -179,14 +201,14 @@ export default function KitchenMenuPage() {
       )}
 
       {/* ── STICKY CATEGORY NAV ─────────────────────────── */}
-      <div ref={navRef} className="sticky top-14 z-20 bg-[#fdf8f0]/95 dark:bg-[#0f0a05]/95 backdrop-blur-sm border-b border-amber-100 dark:border-amber-900/40 px-4 py-2">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {categories.map(cat => (
+      <div ref={navRef} className="sticky top-14 z-20 bg-[#fdf8f0]/95 dark:bg-[#0f0a05]/95 backdrop-blur-md border-b border-amber-100 dark:border-amber-900/40 px-4 py-3">
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
+          {categories.map((cat, idx) => (
             <button key={cat} onClick={() => scrollToCategory(cat)}
-              className={`px-4 py-1.5 rounded-xl text-xs font-body font-bold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
+              className={`px-5 py-2 rounded-xl text-sm font-body font-bold whitespace-nowrap flex-shrink-0 transition-all duration-300 hover:scale-105 ${
                 activeCategory === cat
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-400/30'
-                  : 'bg-white dark:bg-[#1a1108] text-gray-600 dark:text-gray-400 border border-amber-100 dark:border-amber-900/40 hover:border-amber-300'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-400/40'
+                  : 'bg-white dark:bg-[#1a1108] text-gray-600 dark:text-gray-400 border border-amber-100 dark:border-amber-900/40 hover:border-amber-300 hover:shadow-md'
               }`}>
               {cat}
             </button>
@@ -195,66 +217,67 @@ export default function KitchenMenuPage() {
       </div>
 
       {/* ── MENU ITEMS GROUPED BY CATEGORY ──────────────── */}
-      <div className="px-4 pt-4 space-y-6">
+      <div className="px-4 pt-5 space-y-8">
         {categories.filter(c => c !== 'All').map(cat => {
           const catItems = menuItems.filter(i => i.category === cat && i.isAvailable && (!vegOnly || i.isVeg))
           if (!catItems.length) return null
           return (
-            <div key={cat} ref={el => categoryRefs.current[cat] = el}>
-              <h2 className="font-display text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <span className="w-1 h-5 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                {cat}
-                <span className="font-body text-xs text-gray-400 font-normal">({catItems.length})</span>
+            <div key={cat} ref={el => categoryRefs.current[cat] = el} className="animate-fade-in">
+              <h2 className="font-display text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-3">
+                <span className="w-1.5 h-8 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
+                <span>{cat}</span>
+                <span className="font-body text-xs text-gray-400 font-normal bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">{catItems.length} items</span>
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {catItems.map(item => {
                   const isAdded   = addedIds.has(item.id)
                   const inCart    = cart?.items?.find(i => i.menuItem?.id === item.id)
                   const cartQty   = inCart?.quantity || 0
                   return (
                     <div key={item.id}
-                      className={`group flex items-start gap-4 p-4 bg-white dark:bg-[#1a1108] rounded-2xl border transition-all duration-300 ${
-                        isAdded ? 'border-amber-400 shadow-md shadow-amber-400/20 scale-[1.01]' : 'border-amber-100 dark:border-amber-900/40 hover:border-amber-300 hover:shadow-md'
+                      className={`group flex items-start gap-4 p-4 bg-white dark:bg-[#1a1108] rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:shadow-amber-200/30 dark:hover:shadow-amber-900/20 ${
+                        isAdded ? 'border-amber-400 shadow-lg shadow-amber-400/20' : 'border-amber-100 dark:border-amber-900/40 hover:border-amber-300'
                       }`}>
                       <div className="flex-1 min-w-0">
                         {/* Veg dot */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`w-3.5 h-3.5 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${item.isVeg ? 'border-green-500' : 'border-red-500'}`}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${item.isVeg ? 'border-green-500' : 'border-red-500'}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`} />
                           </span>
                           {item.isBestSeller && (
-                            <span className="text-[10px] font-bold text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-1.5 py-0.5 rounded-md">⭐ BESTSELLER</span>
+                            <span className="text-[10px] font-bold text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded-full animate-pulse">⭐ बेस्ट सेलर</span>
                           )}
                         </div>
-                        <h3 className="font-display font-bold text-gray-900 dark:text-white mb-0.5">{item.name}</h3>
-                        <p className="font-body font-bold text-amber-600 dark:text-amber-400 mb-1">{formatCurrency(item.price)}</p>
+                        <h3 className="font-display font-bold text-gray-900 dark:text-white text-lg mb-1 group-hover:text-amber-600 transition-colors">{item.name}</h3>
+                        <p className="font-body font-bold text-amber-600 dark:text-amber-400 text-base mb-1">{formatCurrency(item.price)}</p>
                         {item.description && <p className="text-xs font-body text-gray-500 dark:text-gray-400 line-clamp-2">{item.description}</p>}
-                        {item.preparationTime && <p className="text-[11px] font-body text-gray-400 mt-1">⏱️ {item.preparationTime} min prep</p>}
+                        {item.preparationTime && <p className="text-[11px] font-body text-gray-400 mt-1.5 flex items-center gap-1">⏱️ {item.preparationTime} min prep</p>}
                       </div>
 
                       <div className="flex flex-col items-center gap-2 flex-shrink-0">
                         {item.imageUrl && (
-                          <div className="w-24 h-20 rounded-xl overflow-hidden relative">
-                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-400" onError={e => e.target.style.display='none'} />
+                          <div className="w-26 h-22 rounded-2xl overflow-hidden relative shadow-lg group-hover:scale-105 transition-transform duration-300">
+                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={e => e.target.style.display='none'} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         )}
                         {cartQty > 0 ? (
-                          <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl px-1 py-0.5">
+                          <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl px-1.5 py-1 shadow-lg">
                             <button onClick={() => handleAdd(item)} disabled={addingId === item.id}
-                              className="w-6 h-6 text-white font-bold text-sm flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors">−</button>
-                            <span className="font-body font-bold text-white text-sm w-5 text-center">{cartQty}</span>
+                              className="w-7 h-7 text-white font-bold text-lg flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors">−</button>
+                            <span className="font-body font-bold text-white text-sm w-6 text-center">{cartQty}</span>
                             <button onClick={() => handleAdd(item)} disabled={addingId === item.id || !kitchen?.isOpen}
-                              className="w-6 h-6 text-white font-bold text-sm flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors">+</button>
+                              className="w-7 h-7 text-white font-bold text-lg flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors">+</button>
                           </div>
                         ) : (
                           <button
                             onClick={() => handleAdd(item)}
                             disabled={addingId === item.id || !kitchen?.isOpen}
-                            className={`font-body font-bold text-sm px-4 py-1.5 rounded-xl border-2 transition-all duration-200 ${
+                            className={`font-body font-bold text-sm px-5 py-2 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
                               isAdded
                                 ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                                 : kitchen?.isOpen
-                                  ? 'border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white hover:border-transparent hover:shadow-md'
+                                  ? 'border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white hover:border-transparent shadow-md'
                                   : 'border-gray-200 text-gray-400 cursor-not-allowed'
                             }`}>
                             {addingId === item.id ? '...' : isAdded ? '✓ Added' : '+ ADD'}
