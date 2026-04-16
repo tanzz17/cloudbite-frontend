@@ -314,8 +314,8 @@ const [activeCategory, setActiveCategory] = useState('All')
 
                       <div className="flex flex-col items-center gap-2 flex-shrink-0">
                         {item.imageUrl && (
-                          <div className="w-26 h-22 rounded-2xl overflow-hidden relative shadow-lg group-hover:scale-105 transition-transform duration-300">
-                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={e => e.target.style.display='none'} />
+                          <div className="w-24 h-22 rounded-2xl overflow-hidden relative shadow-lg group-hover:scale-105 transition-transform duration-300">
+                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" onError={e => e.target.style.display='none'} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         )}
