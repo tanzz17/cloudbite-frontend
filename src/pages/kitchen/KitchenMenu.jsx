@@ -81,27 +81,46 @@ export default function KitchenMenu() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="section-title">Menu Management 🍽️</h1>
-          <p className="text-sm font-body text-gray-500 dark:text-gray-400">{items.length} items on menu</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-2xl shadow-lg">🍽️</div>
+          <div>
+            <h1 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Menu Management</h1>
+            <p className="text-sm font-body text-gray-500 dark:text-gray-400">{items.length} dishes • {categories.length - 1} categories</p>
+          </div>
         </div>
-        <button onClick={() => handleOpenForm()} className="btn-primary flex items-center gap-2">
-          <span>➕</span> Add Dish
+        <button onClick={() => handleOpenForm()} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-body font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+          <span className="text-lg">➕</span> Add Dish
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dishes..." className="input-field pl-10" />
+      {/* Search & Filters */}
+      <div className="bg-white dark:bg-[#1a1108] rounded-2xl p-4 border border-amber-100 dark:border-amber-900/40 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">🔍</span>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search your dishes..." 
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-body focus:border-orange-400 focus:outline-none transition-colors" />
+          </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {categories.map(cat => (
+        
+        {/* Category Pills */}
+        <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
+          <button onClick={() => setFilterCat('ALL')}
+            className={`px-4 py-2 rounded-full text-sm font-body font-bold whitespace-nowrap transition-all ${
+              filterCat === 'ALL' 
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-orange-100 dark:hover:bg-orange-900/30'
+            }`}>
+            🍽️ All
+          </button>
+          {categories.filter(c => c !== 'ALL').map(cat => (
             <button key={cat} onClick={() => setFilterCat(cat)}
-              className={`px-3 py-2 rounded-xl text-xs font-body font-bold whitespace-nowrap transition-all ${
-                filterCat === cat ? 'bg-orange-gradient text-white' : 'bg-white dark:bg-brand-dark-card text-gray-600 dark:text-gray-400 border border-orange-100 dark:border-brand-dark-border'
+              className={`px-4 py-2 rounded-full text-sm font-body font-bold whitespace-nowrap transition-all ${
+                filterCat === cat 
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md' 
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-orange-100 dark:hover:bg-orange-900/30'
               }`}>
               {cat}
             </button>
@@ -111,58 +130,79 @@ export default function KitchenMenu() {
 
       {/* Items grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-48 rounded-3xl shimmer" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => <div key={i} className="h-72 rounded-3xl shimmer" />)}
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState icon="🍽️" title={items.length === 0 ? "No dishes yet" : "No matching dishes"}
           message={items.length === 0 ? "Add your first dish to get started!" : "Try a different filter"}
           action={items.length === 0 ? <button onClick={() => handleOpenForm()} className="btn-primary">Add First Dish</button> : null} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filtered.map(item => (
-            <div key={item.id} className={`card overflow-hidden group transition-all ${!item.isAvailable ? 'opacity-60' : ''}`}>
-              <div className="relative">
+            <div key={item.id} className={`bg-white dark:bg-[#1a1108] rounded-3xl border-2 overflow-hidden transition-all hover:shadow-xl hover:shadow-orange-200/30 dark:hover:shadow-orange-900/20 hover:-translate-y-1 ${!item.isAvailable ? 'opacity-60 border-gray-200' : 'border-amber-100 dark:border-amber-900/40'}`}>
+              {/* Image */}
+              <div className="relative h-44 overflow-hidden">
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <div className="w-full h-40 bg-orange-gradient flex items-center justify-center text-4xl">🍽️</div>
-                )}
-                <div className="absolute top-3 left-3 flex gap-2">
-                  <span className={item.isVeg ? 'badge-veg' : 'badge-nonveg'}>{item.isVeg ? '🟢 Veg' : '🔴 Non-Veg'}</span>
-                  {item.isBestSeller && <span className="badge bg-yellow-100 text-yellow-700">⭐ Best Seller</span>}
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
+                ) : null}
+                <div className={`${item.imageUrl ? 'hidden' : 'flex'} w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 items-center justify-center text-5xl`}>
+                  🍛
                 </div>
-                <button
-                  onClick={() => handleToggle(item.id)}
-                  className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
+                
+                {/* Gradient overlay */}
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
+                
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-2">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${item.isVeg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {item.isVeg ? '🟢 Veg' : '🔴 Non-Veg'}
+                  </span>
+                </div>
+                
+                <div className="absolute top-3 right-3 flex gap-2">
+                  <button onClick={() => handleOpenForm(item)} className="w-8 h-8 bg-white/90 dark:bg-gray-800/90 rounded-full flex items-center justify-center text-sm shadow-md hover:bg-white transition-colors">✏️</button>
+                  <button onClick={() => handleToggle(item.id)} className={`px-3 py-1 rounded-full text-xs font-bold shadow-md transition-colors ${
                     item.isAvailable ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
                   }`}>
-                  {item.isAvailable ? '✅ Available' : '❌ Unavailable'}
-                </button>
+                    {item.isAvailable ? '✅' : '❌'}
+                  </button>
+                </div>
+                
+                {item.isBestSeller && (
+                  <div className="absolute bottom-3 left-3 px-2.5 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full shadow-md">⭐ Bestseller</div>
+                )}
               </div>
 
+              {/* Content */}
               <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <h3 className="font-display font-bold text-gray-900 dark:text-white leading-tight">{item.name}</h3>
-                  <span className="font-display font-bold text-orange-600 dark:text-orange-400 whitespace-nowrap">{formatCurrency(item.price)}</span>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-display font-bold text-gray-900 dark:text-white text-lg leading-tight">{item.name}</h3>
+                  <span className="font-display font-bold text-orange-600 dark:text-orange-400 text-lg whitespace-nowrap">{formatCurrency(item.price)}</span>
                 </div>
+                
                 {item.description && (
-                  <p className="text-xs font-body text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">{item.description}</p>
+                  <p className="text-xs font-body text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{item.description}</p>
                 )}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-body text-gray-400">⏱️ {item.preparationTime} min</span>
-                    {item.category && (
-                      <span className="text-xs font-body bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-lg">{item.category}</span>
-                    )}
-                    {item.subCategory && (
-                      <span className="text-xs font-body bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-lg">{item.subCategory}</span>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    <button onClick={() => handleOpenForm(item)} className="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 transition-colors font-body font-bold">✏️ Edit</button>
-                    <button onClick={() => setDeleteId(item.id)} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 transition-colors">🗑️</button>
-                  </div>
+                
+                {/* Category tags */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {item.category && (
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40 text-orange-700 dark:text-orange-300 text-xs font-medium rounded-md">
+                      {item.category}
+                    </span>
+                  )}
+                  {item.subCategory && item.subCategory !== 'General' && (
+                    <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-md">
+                      {item.subCategory}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <span className="text-xs font-body text-gray-400">⏱️ {item.preparationTime || 20} min</span>
+                  <button onClick={() => setDeleteId(item.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">🗑️ Delete</button>
                 </div>
               </div>
             </div>
