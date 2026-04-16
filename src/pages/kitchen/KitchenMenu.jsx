@@ -124,8 +124,10 @@ export default function KitchenMenu() {
             <div key={item.id} className={`card overflow-hidden group transition-all ${!item.isAvailable ? 'opacity-60' : ''}`}>
               <div className="relative">
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-40 object-cover" />
-                ) : (
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-40 object-cover" 
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                ) : null}
+                {!item.imageUrl && (
                   <div className="w-full h-40 bg-orange-gradient flex items-center justify-center text-4xl">🍽️</div>
                 )}
                 <div className="absolute top-3 left-3 flex gap-2">
