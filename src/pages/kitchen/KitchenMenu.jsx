@@ -124,7 +124,7 @@ export default function KitchenMenu() {
             <div key={item.id} className={`card overflow-hidden group transition-all ${!item.isAvailable ? 'opacity-60' : ''}`}>
               <div className="relative">
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-40 object-cover" />
                 ) : (
                   <div className="w-full h-40 bg-orange-gradient flex items-center justify-center text-4xl">🍽️</div>
                 )}
